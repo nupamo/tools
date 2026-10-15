@@ -4,7 +4,6 @@ import { neutralTheme } from '@astryxdesign/theme-neutral/built';
 import { Button } from '@astryxdesign/core/Button';
 import { usePhotoEditor } from '../lib/photo/usePhotoEditor';
 import { frameGeometry } from '../lib/photo/effects';
-import HoldButton from './HoldButton';
 import PhotoControls from './PhotoControls';
 import ToolIcon from './ToolIcon';
 export default function PhotoEditor() {
@@ -23,13 +22,12 @@ export default function PhotoEditor() {
   const original = e.originalCanvas.current, geometry = original ? frameGeometry(original.width, original.height, e.edit) : null;
   const px = e.tab === 'flare' ? e.edit.flareX : e.edit.focusX, py = e.tab === 'flare' ? e.edit.flareY : e.edit.focusY;
   const working = e.loading || e.rendering || e.exporting;
+  const status = e.error || e.message || (e.maskView !== 'none' ? '분석 영역 표시는 저장되지 않습니다. 경계가 다르면 인물 경계를 조절하세요.' : e.format === 'jpeg' ? 'JPG 저장 시 투명한 부분은 흰색으로 채웁니다.' : '');
   return <Theme theme={neutralTheme} mode="light"><section className="editor" aria-label="사진 보정">
     <input ref={input} type="file" accept="image/jpeg,image/png,image/webp,image/avif,.jpg,.jpeg,.png,.webp,.avif" className="visually-hidden" tabIndex={-1} aria-label="사진 파일" disabled={e.locked} onChange={event => { const file = event.target.files?.[0]; if (file) void e.loadFile(file); }} />
     <div className="editor-toolbar"><div className="file-info">{e.photo ? <><span className="file-name" title={e.photo.name}>{e.photo.name}</span><span className="dimensions">{e.photo.width.toLocaleString()} × {e.photo.height.toLocaleString()}</span></> : <span>사진 한 장을 골라 시작하세요.</span>}</div>
       <div className="toolbar-actions"><Button icon={<ToolIcon name="imagePlus" />} label={e.photo ? '다른 사진' : '사진 선택'} size="sm" isDisabled={e.locked} onClick={choose} />
         <Button icon={<ToolIcon name="undo" />} label="실행 취소" size="sm" variant="ghost" isDisabled={!e.history.past.length || e.locked} onClick={e.undo} aria-keyshortcuts="Control+Z Meta+Z" /><Button icon={<ToolIcon name="redo" />} label="다시 실행" size="sm" variant="ghost" isDisabled={!e.history.future.length || e.locked} onClick={e.redo} aria-keyshortcuts="Control+Shift+Z Meta+Shift+Z" />
-        <HoldButton icon={<ToolIcon name="eye" size="sm" />} label="원본 보기" disabled={!e.photo || e.locked} active={e.compare === 'original'} onHold={() => e.setCompare('original')} onRelease={() => e.setCompare('current')} />
-        <HoldButton icon={<ToolIcon name="history" size="sm" />} label="이전 보기" disabled={!e.history.past.length || e.locked || e.rendering} active={e.compare === 'previous'} onHold={() => e.setCompare('previous')} onRelease={() => e.setCompare('current')} />
         <Button icon={<ToolIcon name="reset" />} label="전체 초기화" size="sm" variant="ghost" isDisabled={!e.photo || e.locked} onClick={e.resetAll} />
       </div>
     </div>
@@ -53,6 +51,6 @@ export default function PhotoEditor() {
       {e.photo && <span className="preview-label">{e.compare === 'original' ? '원본' : e.compare === 'previous' ? '이전 편집' : e.maskView === 'depth' ? '깊이 지도' : e.maskView !== 'none' ? '분석 영역' : '보정'}</span>}
       {working && <span className="progress-chip" role="status">{e.exporting ? '원본 크기로 저장 중…' : e.loading ? '사진 여는 중…' : '미리보기 반영 중…'}</span>}
     </div><PhotoControls editor={e} /></div>
-    <div className={`editor-status ${e.error ? 'has-error' : ''}`} role={e.error ? 'alert' : 'status'} aria-live="polite">{e.error || e.message || (e.maskView !== 'none' ? '분석 영역 표시는 저장되지 않습니다. 경계가 다르면 인물 경계를 조절하세요.' : e.format === 'jpeg' ? 'JPG 저장 시 투명한 부분은 흰색으로 채웁니다.' : '사진은 기기 안에서 처리됩니다. 모델 파일만 외부에서 다운로드합니다.')}</div>
+    <div className={`editor-status ${e.error ? 'has-error' : ''}`} role={e.error ? 'alert' : 'status'} aria-live="polite">{status}</div>
   </section></Theme>;
 }

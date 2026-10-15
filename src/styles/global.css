@@ -89,12 +89,18 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 .panel-bottom { margin-top: auto; display: flex; flex-direction: column; gap: 8px; padding-top: 8px; }
 .model-state, .model-message { font-size: 11px; line-height: 1.4; color: var(--muted); display: flex; align-items: center; gap: 6px; overflow-wrap: anywhere; }
 .model-message.has-error { color: var(--color-text-red); }
-.preset-actions { display: flex; gap: 4px; justify-content: space-between; border-top: 1px solid var(--line); padding-top: 5px; }
+.preset-dialog-content { display: flex; flex-direction: column; gap: 20px; padding-top: 16px; }
+.preset-section { display: flex; flex-direction: column; gap: 10px; }
+.preset-section h3 { font-size: 13px; font-weight: 600; margin: 0; }
 .export-controls { display: flex; flex-direction: column; gap: 8px; }
+.export-settings { display: grid; grid-template-columns: minmax(0,1fr) auto; align-items: center; gap: 8px; }
+.compare-actions { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 6px; }
+.compare-actions .hold-button { justify-content: center; }
 .format-row { display: flex; align-items: center; justify-content: space-between; gap: 6px; color: var(--muted); font-size: 11px; }
 .format-row select { min-width: 0; border: 1px solid var(--color-border-emphasized); border-radius: 4px; padding: 4px; background: var(--surface); color: var(--ink); }
 .export-note { text-align: center; font-size: 10px; color: var(--muted); }
 .editor-status { min-height: 30px; padding: 6px 12px; border-top: 1px solid var(--line); font-size: 11px; color: var(--muted); flex-shrink: 0; }
+.editor-status:empty { display: none; }
 .editor-status.has-error { color: var(--color-text-red); background: var(--color-background-red); }
 .noscript-message { padding: 12px; }
 @media (min-width:761px) and (max-height:900px) {
@@ -119,21 +125,10 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
  .effect-tabs button { padding: 3px 2px; }
  .choice-grid button { padding: 4px 2px; }
  .controls-grid { gap: 4px 14px; }
- .export-controls { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr); align-items: center; }
  .format-row { font-size: 0; }
  .format-row select { font-size: 11px; width: 100%; }
  .export-note { display: none; }
- .preset-actions { padding-top: 2px; }
  .model-state, .panel-note, .model-message { font-size: 10px; }
-}
-@media (max-width:1100px) and (min-width:761px) {
- .editor-toolbar { flex-direction: column; align-items: stretch; gap: 4px; }
- .file-info { flex-direction: row; justify-content: space-between; }
- .file-name { max-width: 60vw; }
- .toolbar-actions { gap: 2px; }
- .toolbar-actions > * { flex: 1; justify-content: center; }
- .hold-button { padding: 5px 7px; }
- .hold-hint { display: none; }
 }
 @media (max-width:760px) {
  .site-header { height: 52px; padding: 0 18px; }
@@ -147,7 +142,7 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
  .editor-toolbar { flex-direction: column; align-items: stretch; padding: 8px; gap: 6px; }
  .file-info { flex-direction: row; justify-content: space-between; }
  .file-name { max-width: 60vw; }
- .toolbar-actions { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 4px; }
+ .toolbar-actions { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 4px; }
  .toolbar-actions > * { justify-content: center; }
  .editor-body { display: flex; flex-direction: column; }
  .photo-stage { height: 46dvh; min-height: 250px; padding: 24px 14px; }
@@ -159,5 +154,7 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 @media (max-width:400px) {
  .effect-tabs button { flex-direction: column; gap: 3px; }
  .choice-grid.three button { flex-direction: column; }
+ .format-row { font-size: 0; }
+ .format-row select { width: 100%; font-size: 11px; }
 }
 @media (prefers-reduced-motion:reduce) { * { transition: none !important; } }

@@ -1,8 +1,10 @@
 import { Button } from '@astryxdesign/core/Button';
 import { Slider } from '@astryxdesign/core/Slider';
-import { PRESETS, type EditState, type Tab } from '../lib/photo/state';
+import { type EditState, type Tab } from '../lib/photo/state';
 import type { PhotoEditorModel } from '../lib/photo/usePhotoEditor';
 import ToolIcon, { type ToolIconName } from './ToolIcon';
+import HoldButton from './HoldButton';
+import PhotoPresets from './PhotoPresets';
 const TABS: { id: Tab; label: string; icon: ToolIconName }[] = [
   { id: 'light', label: '밝기', icon: 'sun' }, { id: 'color', label: '색감', icon: 'palette' },
   { id: 'skin', label: '피부', icon: 'face' }, { id: 'focus', label: '초점', icon: 'focus' },
@@ -16,7 +18,6 @@ const SLIDER_ICONS: Partial<Record<keyof EditState, ToolIconName>> = {
   outlineWidth: 'frame', maskThreshold: 'scan', maskFeather: 'blend', glow: 'sparkles', glowRadius: 'expand',
   flare: 'sun', flareSize: 'maximize', frameWidth: 'frame',
 };
-const PRESET_ICONS: Record<string, ToolIconName> = { 자연스럽게: 'wand', 따뜻하게: 'sun', 차분하게: 'moon', 흑백: 'contrast' };
 export default function PhotoControls({ editor: e }: { editor: PhotoEditorModel }) {
   const enabledKey = `${e.tab}Enabled` as keyof EditState, enabled = e.edit[enabledKey] === true;
   const baseDisabled = !e.photo || e.locked, disabled = baseDisabled || !enabled, skinDisabled = disabled || !e.hasMasks;
@@ -35,7 +36,7 @@ export default function PhotoControls({ editor: e }: { editor: PhotoEditorModel 
     }}><ToolIcon name={t.icon} size="sm" />{t.label}</button>)}</div>
     <div className="effect-panel" id="effect-panel" role="tabpanel" aria-labelledby={`tab-${e.tab}`}>
       <div className="adjustment-heading"><h2>{TABS.find(t => t.id === e.tab)?.label}</h2><label className="check-control effect-toggle"><input type="checkbox" checked={enabled} disabled={baseDisabled} onChange={event => e.update({ [enabledKey]: event.target.checked })} />적용</label><Button icon={<ToolIcon name="reset" />} label="이 항목 초기화" variant="ghost" size="sm" isDisabled={baseDisabled} onClick={e.resetGroup} /></div>
-      {e.tab === 'light' && <><div className="controls-grid">{slider('exposure', '노출', -100)}{slider('contrast', '대비', -50, 50)}{slider('highlights', '밝은 영역', -100)}{slider('shadows', '어두운 영역', -100)}</div><div className="preset-grid">{Object.entries(PRESETS).map(([name, preset]) => <Button key={name} icon={<ToolIcon name={PRESET_ICONS[name] ?? 'wand'} />} label={name} size="sm" isDisabled={disabled} onClick={() => e.update(preset)} />)}</div></>}
+      {e.tab === 'light' && <><div className="controls-grid">{slider('exposure', '노출', -100)}{slider('contrast', '대비', -50, 50)}{slider('highlights', '밝은 영역', -100)}{slider('shadows', '어두운 영역', -100)}</div></>}
       {e.tab === 'color' && <div className="controls-grid">{slider('warmth', '색온도', -50, 50)}{slider('tint', '색조', -50, 50)}{slider('saturation', '채도', -100)}{slider('vibrance', '생동감', -100)}</div>}
       {e.tab === 'skin' && <><div className="controls-grid">{slider('smoothing', '피부 부드럽게', 0, 100, !e.hasMasks)}{slider('skinTone', '피부톤 밝기', -50, 50, !e.hasMasks)}</div><label className="check-control"><input type="checkbox" checked={e.maskView === 'skin'} disabled={skinDisabled} onChange={event => e.setMaskView(event.target.checked ? 'skin' : 'none')} />피부 영역 확인</label><p className="panel-note">얼굴·몸 피부에만 적용합니다.</p></>}
       {e.tab === 'focus' && <><div className="choice-grid" aria-label="초점 방식">{(['off', 'manual', 'person', 'depth'] as const).map((mode, i) => <button key={mode} type="button" aria-pressed={e.edit.focusMode === mode} disabled={disabled || (mode === 'person' && !e.hasMasks) || (mode === 'depth' && !e.hasDepth)} onClick={() => e.update({ focusMode: mode })}><ToolIcon name={(['off', 'focus', 'person', 'layers'] as const)[i]} size="sm" />{['없음', '직접 지정', '인물 유지', '깊이 초점'][i]}</button>)}</div>
@@ -58,8 +59,15 @@ export default function PhotoControls({ editor: e }: { editor: PhotoEditorModel 
     </div>
     <div className="panel-bottom">
       {(e.tab === 'skin' || e.tab === 'subject' || e.tab === 'focus') && <div className="model-state" role="status"><span>{e.segmentation.text}{e.segmentation.backend && ` · ${e.segmentation.backend}`}{e.segmentation.progress !== undefined && ` ${Math.round(e.segmentation.progress * 100)}%`}</span>{e.segmentation.status === 'error' && <Button icon={<ToolIcon name="scan" />} label="다시 분석" size="sm" onClick={() => void e.analyzePerson()} isDisabled={baseDisabled} />}</div>}
-      <div className="preset-actions"><Button icon={<ToolIcon name="download" />} label="내 설정 저장" size="sm" variant="ghost" isDisabled={baseDisabled} onClick={e.storePreset} /><Button icon={<ToolIcon name="upload" />} label="불러오기" size="sm" variant="ghost" isDisabled={baseDisabled || !e.savedPreset} onClick={e.applySavedPreset} /></div>
-      <div className="export-controls"><label className="format-row">저장 형식<select value={e.format} disabled={e.locked} onChange={event => e.setFormat(event.target.value as 'png' | 'jpeg')}><option value="png">PNG · 투명도 유지</option><option value="jpeg">JPG · 품질 95%</option></select></label><Button icon={<ToolIcon name="download" />} label="사진 저장" variant="primary" width="100%" isLoading={e.exporting} isDisabled={baseDisabled || e.rendering || !e.engineReady} onClick={() => void e.save()} /><span className="export-note">원본 크기 보정 · 테두리만큼 여백 추가</span></div>
+      <div className="export-controls">
+        <div className="export-settings"><label className="format-row">저장 형식<select value={e.format} disabled={e.locked} onChange={event => e.setFormat(event.target.value as 'png' | 'jpeg')}><option value="png">PNG · 투명도 유지</option><option value="jpeg">JPG · 품질 95%</option></select></label><PhotoPresets editor={e} /></div>
+        <div className="compare-actions" role="group" aria-label="누르는 동안 비교">
+          <HoldButton icon={<ToolIcon name="eye" size="sm" />} label="원본 보기" disabled={baseDisabled} active={e.compare === 'original'} onHold={() => e.setCompare('original')} onRelease={() => e.setCompare('current')} />
+          <HoldButton icon={<ToolIcon name="history" size="sm" />} label="이전 보기" disabled={!e.history.past.length || e.locked || e.rendering} active={e.compare === 'previous'} onHold={() => e.setCompare('previous')} onRelease={() => e.setCompare('current')} />
+        </div>
+        <Button icon={<ToolIcon name="download" />} label="사진 저장" variant="primary" width="100%" isLoading={e.exporting} isDisabled={baseDisabled || e.rendering || !e.engineReady} onClick={() => void e.save()} />
+        <span className="export-note">원본 크기 보정 · 테두리만큼 여백 추가</span>
+      </div>
     </div>
   </aside>;
 }
