@@ -1,4 +1,4 @@
-name: Check and build
+name: Check, build and deploy
 on:
   push:
     branches: [main]
@@ -6,6 +6,9 @@ on:
   workflow_dispatch:
 permissions:
   contents: read
+concurrency:
+  group: tools-${{ github.ref }}
+  cancel-in-progress: false
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -19,7 +22,30 @@ jobs:
       - run: npm run check
       - run: npm test
       - run: npm run build
+        env:
+          BASE_PATH: /tools/
+          SITE_URL: https://nupamo.github.io
       - uses: actions/upload-artifact@v4
         with:
           name: tools-static
           path: dist/
+      - uses: actions/upload-pages-artifact@v5
+        if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+        with:
+          path: dist/
+  deploy:
+    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Configure GitHub Pages
+        uses: actions/configure-pages@v6
+      - name: Deploy GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v5

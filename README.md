@@ -52,7 +52,11 @@ Canvas 디코딩·인코딩을 거치므로 RAW/HDR/광색역 보존 편집은 �
 BASE_PATH=/tools/ npm run build
 ```
 
-현재 CI는 검사·테스트·빌드를 수행하고 `tools-static` 아티팩트를 만듭니다. 자동 공개 배포는 설정하지 않았습니다.
+CI는 검사·테스트·빌드를 수행하고 `tools-static` 및 GitHub Pages 아티팩트를 만듭니다. `main`에 push하면 검증 성공 후 GitHub Pages로 자동 배포합니다. Pull request는 검증·빌드만 수행합니다.
+
+최초 한 번 저장소 **Settings → Pages → Build and deployment → Source → GitHub Actions**를 선택해야 합니다. 이 설정은 저장소 관리자 권한이 필요하며, 기본 `GITHUB_TOKEN`으로는 최초 활성화할 수 없습니다. 활성화 전에 실행되어 실패한 배포는 Actions에서 **Re-run failed jobs**로 재실행합니다.
+
+배포 주소는 `https://nupamo.github.io/tools/`입니다. Pages 빌드 시 `BASE_PATH=/tools/`, `SITE_URL=https://nupamo.github.io`를 지정합니다. 커스텀 도메인을 사용할 때에는 Pages 도메인 설정과 빌드의 `SITE_URL`·`BASE_PATH`를 함께 변경해야 합니다.
 
 ## 검증 범위
 
