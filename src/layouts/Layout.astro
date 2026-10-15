@@ -1,0 +1,25 @@
+---
+import '../styles/global.css';
+interface Props { title: string; description: string; workspace?: boolean; }
+const { title, description, workspace = false } = Astro.props;
+const base = import.meta.env.BASE_URL;
+---
+<!doctype html>
+<html lang="ko" data-theme="light" data-astryx-theme="neutral">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content={description} />
+    <meta name="color-scheme" content="light" />
+    <link rel="icon" type="image/svg+xml" href={`${base}favicon.svg`} />
+    <title>{title === 'tools' ? title : `${title} · tools`}</title>
+  </head>
+  <body class:list={{ 'workspace-page': workspace }}>
+    <a href="#main" class="skip-link">본문으로 이동</a>
+    <header class="site-header">
+      <a class="wordmark" href={base} aria-label="tools 홈">tools<span aria-hidden="true">.</span></a>
+      <a class="header-link" href={base}>도구 목록</a>
+    </header>
+    <main id="main"><slot /></main>
+  </body>
+</html>

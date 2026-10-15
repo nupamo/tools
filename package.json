@@ -1,0 +1,35 @@
+{
+  "name": "tools",
+  "version": "0.1.0",
+  "description": "직접 쓰려고 만든 작은 도구들. Astro static + Astryx.",
+  "scripts": {
+    "dev": "astro dev --host 0.0.0.0",
+    "check": "astro check",
+    "build": "astro build",
+    "preview": "astro preview --host 0.0.0.0",
+    "test": "node --import tsx --test tests/*.test.ts",
+    "astryx": "node node_modules/@astryxdesign/cli/clients/cli/bin/astryx.mjs"
+  },
+  "keywords": [],
+  "author": "",
+  "type": "module",
+  "dependencies": {
+    "@astrojs/react": "7.0.1",
+    "@astryxdesign/core": "0.7.0",
+    "@astryxdesign/theme-neutral": "0.7.0",
+    "@stylexjs/stylex": "0.19.1",
+    "astro": "7.3.8",
+    "react": "19.3.1",
+    "react-dom": "19.3.1"
+  },
+  "devDependencies": {
+    "@astrojs/check": "0.9.10",
+    "@astryxdesign/cli": "0.7.0",
+    "@types/node": "24.19.2",
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
+    "tsx": "4.23.15",
+    "typescript": "6.0.3"
+  },
+  "private": true
+}

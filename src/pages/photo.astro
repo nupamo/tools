@@ -1,0 +1,14 @@
+---
+import Layout from '../layouts/Layout.astro';
+import PhotoEditor from '../components/PhotoEditor';
+import { tools } from '../data/tools';
+const tool = tools.find(t => t.slug === 'photo')!;
+---
+<Layout title={tool.name} description={tool.description} workspace>
+  <div class="tool-heading">
+    <h1>{tool.name}</h1>
+    <p class="processing-meta"><span class="status-dot" aria-hidden="true"></span>서버 사용 {tool.processing.server ? '있음' : '없음'}<span aria-hidden="true">·</span>온디바이스 모델 {tool.processing.model ?? '없음'}<span class="processing-note">{tool.processing.note}</span></p>
+  </div>
+  <PhotoEditor client:load />
+  <noscript><p class="noscript-message">사진 보정을 사용하려면 JavaScript를 켜주세요. 사진은 서버로 전송되지 않습니다.</p></noscript>
+</Layout>
