@@ -44,6 +44,7 @@ export function usePhotoEditor() {
       finishEdit(); putHistory(commitEdit(historyRef.current, { ...historyRef.current.present, ...patch }));
     }
     setCompare('current'); setMessage('');
+    if (Object.entries(patch).some(([key, value]) => key.endsWith('Enabled') && value === false)) setMaskView('none');
     if (patch.background === 'transparent') setFormat('png');
   }
   function undo() { finishEdit(); putHistory(undoEdit(historyRef.current)); setCompare('current'); }
