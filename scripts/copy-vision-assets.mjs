@@ -1,0 +1,11 @@
+import { cp, mkdir, readFile } from 'node:fs/promises';
+import { fileURLToPath } from 'node:url';
+const root = new URL('../', import.meta.url);
+const packageRoot = new URL('node_modules/@mediapipe/tasks-vision/', root);
+const version = JSON.parse(await readFile(new URL('package.json', packageRoot), 'utf8')).version;
+if (version !== '1.0.1') throw new Error('Update segment-worker.js when upgrading MediaPipe');
+const out = new URL(`dist/vendor/mediapipe-${version}/`, root);
+await mkdir(out, { recursive: true });
+await cp(new URL('vision_bundle.js', packageRoot), new URL('vision_bundle.js', out));
+await cp(new URL('wasm/', packageRoot), new URL('wasm/', out), { recursive: true });
+console.log(`MediaPipe ${version} runtime copied to ${fileURLToPath(out)}`);

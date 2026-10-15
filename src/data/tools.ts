@@ -11,8 +11,8 @@ export const tools: Tool[] = [
   {
     slug: 'photo',
     name: '사진 보정',
-    description: '피부를 부드럽게 하고, 인물 사진의 톤과 색감을 조절합니다.',
+    description: '색감·빛·초점을 조절하고, 인물과 배경을 꾸밉니다.',
     category: '이미지',
-    processing: { server: false, model: null, note: '사진은 이 기기에서만 처리됩니다.' },
+    processing: { server: false, model: 'SelfieMulticlass · Depth Anything V2 Small(선택)', note: '사진 전송 없음 · 모델만 다운로드' },
   },
 ];

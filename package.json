@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "astro dev --host 0.0.0.0",
     "check": "astro check",
-    "build": "astro build",
+    "build": "astro build && node scripts/copy-vision-assets.mjs",
     "preview": "astro preview --host 0.0.0.0",
     "test": "node --import tsx --test tests/*.test.ts",
     "astryx": "node node_modules/@astryxdesign/cli/clients/cli/bin/astryx.mjs"
@@ -17,6 +17,8 @@
     "@astrojs/react": "7.0.1",
     "@astryxdesign/core": "0.7.0",
     "@astryxdesign/theme-neutral": "0.7.0",
+    "@huggingface/transformers": "4.3.1",
+    "@mediapipe/tasks-vision": "1.0.1",
     "@stylexjs/stylex": "0.19.1",
     "astro": "7.3.8",
     "react": "19.3.1",
@@ -28,6 +30,7 @@
     "@types/node": "24.19.2",
     "@types/react": "19.3.0",
     "@types/react-dom": "19.3.0",
+    "happy-dom": "21.0.1",
     "tsx": "4.23.15",
     "typescript": "6.0.3"
   },
