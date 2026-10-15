@@ -21,6 +21,7 @@
     "@mediapipe/tasks-vision": "1.0.1",
     "@stylexjs/stylex": "0.19.1",
     "astro": "7.3.8",
+    "lucide-react": "1.57.0",
     "react": "19.3.1",
     "react-dom": "19.3.1"
   },
