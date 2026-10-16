@@ -16,8 +16,8 @@ test('export tiles cover every original pixel once and stay inside GPU limits', 
   assert(counts.every(n => n === 1));
 });
 
-test('tile overlap includes the combined blur, glow and outline chain at original resolution', () => {
-  const edit = { ...INITIAL, focusMode: 'person' as const, blur: 100, glow: 100, glowRadius: 100, outlineWidth: 6 };
+test('tile overlap includes the combined blur and glow chain at original resolution', () => {
+  const edit = { ...INITIAL, focusMode: 'depth' as const, blur: 100, glow: 100, glowRadius: 100 };
   const small = filterHalo(1200, 800, edit), full = filterHalo(6000, 4000, edit);
   assert(full > (small - 8) * 4.9);
   const tiles = photoTiles(6000, 4000, full, 4096);

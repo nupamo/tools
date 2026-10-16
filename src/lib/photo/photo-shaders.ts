@@ -19,39 +19,30 @@ in vec2 vTextureCoord;
 out vec4 finalColor;
 uniform sampler2D uTexture;
 uniform sampler2D uOther;
-uniform sampler2D uPerson;
 uniform sampler2D uDepthMap;
 uniform vec4 uInputSize;
 uniform vec4 uInputClamp;
 uniform vec4 uShape;
 uniform vec2 uTile;
-uniform vec2 uPersonSize;
 uniform vec2 uDepthSize;
-uniform vec2 uAvailable;
+uniform float uHasDepth;
 uniform vec4 uFocus;
 uniform float uFocusMode;
 uniform float uFocusDepth;
-uniform vec2 uBorder;
 uniform vec4 uTone;
 uniform float uVibrance;
 uniform vec4 uFlare;
 uniform float uFlareStyle;
-uniform vec3 uBackground;
-uniform float uOverlay;
 uniform float uMix;
 vec2 pixel() { return vTextureCoord * uInputSize.xy; }
 vec2 globalUV() { return (pixel() + uShape.zw) / uShape.xy; }
 vec2 localUV() { return pixel() / uTile; }
 vec2 mapUV(vec2 uv, vec2 size) { return (clamp(uv, 0.0, 1.0) * (size - 1.0) + .5) / size; }
-float personAt(vec2 uv) {
-  return uAvailable.x * smoothstep(uBorder.x - uBorder.y, uBorder.x + uBorder.y, texture(uPerson, mapUV(uv,uPersonSize)).r);
-}
 float depthAt(vec2 uv) { return texture(uDepthMap,mapUV(uv,uDepthSize)).r; }
 float focusAt(vec2 uv) {
   if (uFocusMode < .5) return 0.0;
   if (uFocusMode < 1.5) return smoothstep(uFocus.z,uFocus.z+.2,length((uv-uFocus.xy)*uShape.xy/min(uShape.x,uShape.y)));
-  if (uFocusMode < 2.5) return uAvailable.x * (1.0-personAt(uv));
-  return uAvailable.y * smoothstep(uFocus.w,uFocus.w+.22,abs(depthAt(uv)-uFocusDepth));
+  return uHasDepth * smoothstep(uFocus.w,uFocus.w+.22,abs(depthAt(uv)-uFocusDepth));
 }
 vec3 straight(vec4 c) { return c.a > .0001 ? c.rgb/c.a : vec3(0.0); }
 vec4 photo(vec3 rgb, float alpha) { return vec4(clamp(rgb,0.0,1.0)*alpha,alpha); }
@@ -86,7 +77,7 @@ void main() {
   if (radius < .25) { finalColor=original; return; }
   vec3 sum=vec3(0.0); float total=0.0;
   // A deterministic aperture disk. Reject focused foreground contributions
-  // and renormalize to avoid colour halos around the person.
+  // and renormalize to avoid colour halos around the focused area.
   for(int i=0;i<40;i++) {
     float fi=float(i), angle=fi*2.39996323;
     vec2 offset=vec2(cos(angle),sin(angle))*sqrt(fi/39.0)*radius;
@@ -97,22 +88,6 @@ void main() {
     sum+=rgb*weight; total+=weight;
   }
   finalColor=photo(mix(straight(original),total>.001 ? sum/total : straight(original),coc),original.a);
-}`,
-  cutout: `${common}
-void main() { finalColor=texture(uTexture,vTextureCoord)*personAt(globalUV()); }`,
-  outlineOver: `${common}
-void main() {
-  vec4 c=texture(uTexture,vTextureCoord), line=texture(uOther,localUV());
-  finalColor=line+c*(1.0-line.a);
-}`,
-  background: `${common}
-void main() { vec4 c=texture(uTexture,vTextureCoord); finalColor=vec4(c.rgb+uBackground*(1.0-c.a),1.0); }`,
-  overlay: `${common}
-void main() {
-  vec4 c=texture(uTexture,vTextureCoord); vec2 uv=globalUV();
-  if(uOverlay>1.5) { finalColor=vec4(vec3(depthAt(uv)),1.0); return; }
-  float m=personAt(uv);
-  finalColor=photo(mix(straight(c),vec3(0.0,.745,0.0),m*.6),c.a);
 }`,
   flare: `${common}
 float gaussian(float r,float falloff) { return exp(-r*r*falloff); }

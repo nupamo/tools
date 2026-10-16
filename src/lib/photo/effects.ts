@@ -1,6 +1,6 @@
 import { effectiveState, type EditState } from './state';
 export interface Plane { data: Float32Array; width: number; height: number; }
-export interface Masks { person?: Plane; depth?: Plane; }
+export interface Masks { depth?: Plane; }
 export interface Rendered { pixels: Uint8ClampedArray; width: number; height: number; offsetX: number; offsetY: number; }
 export const clamp = (x: number, a = 0, b = 1) => Math.max(a, Math.min(b, x));
 export function smooth(a: number, b: number, x: number) { const t = clamp((x - a) / Math.max(.00001, b - a)); return t * t * (3 - 2 * t); }
@@ -12,12 +12,6 @@ export function sample(map: Plane, x: number, y: number): number {
     + map.data[y1 * map.width + x0] * (1 - tx) * ty + map.data[y1 * map.width + x1] * tx * ty;
 }
 const rgb = (hex: string) => [1, 3, 5].map(i => parseInt(hex.slice(i, i + 2), 16) || 0);
-function mapBytes(plane: Plane, w: number, h: number, threshold = .5, feather = .18) {
-  const result = new Uint8Array(w * h);
-  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) result[y * w + x] = Math.round(255 * smooth(threshold - feather, threshold + feather, sample(plane, (x + .5) / w, (y + .5) / h)));
-  return result;
-}
-
 /** Sliding box filter, O(n) independent of radius. Premultiplied inputs prevent transparent-edge darkening. */
 export function boxBlur(input: Uint8ClampedArray, w: number, h: number, radius: number): Uint8ClampedArray {
   const r = Math.max(1, Math.round(radius)), count = r * 2 + 1;
@@ -57,28 +51,11 @@ function weightedBlur(source: Uint8ClampedArray, w: number, h: number, radius: n
   return result;
 }
 
-/** Chamfer distance to foreground in 1/3 px units. Bounded memory, rounded outside strokes. */
-export function distanceToSubject(mask: Uint8Array, w: number, h: number) {
-  const d = new Uint16Array(w * h); for (let i = 0; i < d.length; i++) d[i] = mask[i] >= 128 ? 0 : 60000;
-  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
-    const i = y * w + x;
-    if (x) d[i] = Math.min(d[i], d[i - 1] + 3);
-    if (y) { d[i] = Math.min(d[i], d[i - w] + 3); if (x) d[i] = Math.min(d[i], d[i - w - 1] + 4); if (x < w - 1) d[i] = Math.min(d[i], d[i - w + 1] + 4); }
-  }
-  for (let y = h - 1; y >= 0; y--) for (let x = w - 1; x >= 0; x--) {
-    const i = y * w + x;
-    if (x < w - 1) d[i] = Math.min(d[i], d[i + 1] + 3);
-    if (y < h - 1) { d[i] = Math.min(d[i], d[i + w] + 3); if (x) d[i] = Math.min(d[i], d[i + w - 1] + 4); if (x < w - 1) d[i] = Math.min(d[i], d[i + w + 1] + 4); }
-  }
-  return d;
-}
-
-export function renderPhoto(source: Uint8ClampedArray, w: number, h: number, raw: EditState, masks: Masks = {}, showMask: 'none' | 'person' | 'depth' = 'none'): Rendered {
+export function renderPhoto(source: Uint8ClampedArray, w: number, h: number, raw: EditState, masks: Masks = {}, showMask: 'none' | 'depth' = 'none'): Rendered {
   if (!Number.isInteger(w) || !Number.isInteger(h) || w < 1 || h < 1 || source.length !== w * h * 4) throw new Error('사진 크기가 올바르지 않습니다.');
+  if (showMask === 'depth') return renderDepthMap(w, h, masks.depth);
   const s = effectiveState(raw);
   const min = Math.min(w, h), pixels = new Uint8ClampedArray(source.length);
-  const needsPerson = s.focusMode === 'person' || s.background !== 'original' || s.outlineWidth > 0 || showMask === 'person';
-  const person = masks.person && needsPerson ? mapBytes(masks.person, w, h, s.maskThreshold / 100, Math.max(.005, s.maskFeather / 100)) : undefined;
   const exposure = 2 ** (s.exposure / 100), contrast = 1 + s.contrast / 150, saturation = 1 + s.saturation / 100;
   for (let p = 0, i = 0; p < pixels.length; p += 4, i++) {
     const l = (.2126 * source[p] + .7152 * source[p + 1] + .0722 * source[p + 2]) / 255;
@@ -104,8 +81,7 @@ export function renderPhoto(source: Uint8ClampedArray, w: number, h: number, raw
     const amounts = new Uint8Array(w * h);
     for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
       const i = y * w + x;
-      if (s.focusMode === 'person') amounts[i] = person ? 255 - person[i] : 0;
-      else if (s.focusMode === 'depth') amounts[i] = masks.depth ? smooth(s.focusRange / 200, s.focusRange / 200 + .22, Math.abs(sample(masks.depth, (x + .5) / w, (y + .5) / h) - s.depthFocus)) * 255 : 0;
+      if (s.focusMode === 'depth') amounts[i] = masks.depth ? smooth(s.focusRange / 200, s.focusRange / 200 + .22, Math.abs(sample(masks.depth, (x + .5) / w, (y + .5) / h) - s.depthFocus)) * 255 : 0;
       else { const dx = (x / w - s.focusX) * w / min, dy = (y / h - s.focusY) * h / min; const radius = s.focusRadius / 200; amounts[i] = smooth(radius, radius + .2, Math.hypot(dx, dy)) * 255; }
     }
     // Focused pixels do not contribute colour to defocused regions. This avoids
@@ -126,32 +102,18 @@ export function renderPhoto(source: Uint8ClampedArray, w: number, h: number, raw
       for (let c = 0; c < 3; c++) pixels[p + c] = 255 - (255 - pixels[p + c]) * (1 - colour[c] / 255 * a);
     }
   }
-  if (person) {
-    const background = rgb(s.backgroundColor), outline = rgb(s.outlineColor);
-    const radius = s.outlineWidth / 100 * min, distances = radius > 0 ? distanceToSubject(person, w, h) : undefined;
-    for (let p = 0, i = 0; p < pixels.length; p += 4, i++) {
-      const subject = person[i] / 255, origAlpha = pixels[p + 3] / 255;
-      const a = s.background === 'original' ? origAlpha : origAlpha * subject;
-      const stroke = distances ? (1 - smooth(radius - .5, radius + .5, distances[i] / 3)) * (1 - subject) : 0;
-      const combined = a + stroke * (1 - a);
-      if (s.background === 'original') {
-        for (let c = 0; c < 3; c++) pixels[p + c] += (outline[c] - pixels[p + c]) * stroke;
-      } else {
-        for (let c = 0; c < 3; c++) {
-          const value = combined ? (pixels[p + c] * a + outline[c] * stroke * (1 - a)) / combined : 0;
-          pixels[p + c] = s.background === 'solid' ? value * combined + background[c] * (1 - combined) : value;
-        }
-        pixels[p + 3] = s.background === 'solid' ? 255 : combined * 255;
-      }
-    }
-  }
-  const plane = showMask === 'person' ? masks.person : showMask === 'depth' ? masks.depth : undefined;
-  if (plane) for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
-    const p = (y * w + x) * 4, m = showMask === 'person' && person ? person[y * w + x] / 255 : clamp(sample(plane, (x + .5) / w, (y + .5) / h));
-    if (showMask === 'depth') { pixels[p] = pixels[p + 1] = pixels[p + 2] = m * 255; pixels[p + 3] = 255; }
-    else { pixels[p] *= 1 - m * .6; pixels[p + 1] = pixels[p + 1] * (1 - m * .6) + 190 * m * .6; pixels[p + 2] *= 1 - m * .6; }
-  }
   return addFrame(pixels, w, h, s);
+}
+
+/** Shared by preview and export: plain opaque grayscale, independent of photo effects. */
+export function renderDepthMap(w: number, h: number, depth?: Plane): Rendered {
+  if (!depth) throw new Error('깊이 분석을 먼저 완료해주세요.');
+  const pixels = new Uint8ClampedArray(w * h * 4);
+  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
+    const p = (y * w + x) * 4, value = sample(depth, (x + .5) / w, (y + .5) / h);
+    pixels[p] = pixels[p + 1] = pixels[p + 2] = Math.round(clamp(Number.isFinite(value) ? value : 0) * 255); pixels[p + 3] = 255;
+  }
+  return { pixels, width: w, height: h, offsetX: 0, offsetY: 0 };
 }
 
 export function frameGeometry(w: number, h: number, raw: EditState) {

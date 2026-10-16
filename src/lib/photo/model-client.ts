@@ -1,6 +1,6 @@
 import type { Plane } from './effects';
 export interface ModelProgress { text: string; progress?: number; }
-export interface ModelOutput { backend?: 'CPU' | 'GPU'; person?: Plane; depth?: Plane; }
+export interface ModelOutput { backend?: 'CPU' | 'GPU'; depth?: Plane; }
 type Pending = { resolve: (result: ModelOutput) => void; reject: (cause: Error) => void; progress: (value: ModelProgress) => void; timer: ReturnType<typeof setTimeout> };
 export class ModelClient {
   private worker: Worker | undefined;

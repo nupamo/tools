@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "astro dev --host 0.0.0.0",
     "check": "astro check",
-    "build": "astro build && node scripts/copy-vision-assets.mjs",
+    "build": "astro build",
     "preview": "astro preview --host 0.0.0.0",
     "test": "node --import tsx --test tests/*.test.ts",
     "astryx": "node node_modules/@astryxdesign/cli/clients/cli/bin/astryx.mjs"
@@ -18,7 +18,6 @@
     "@astryxdesign/core": "0.7.0",
     "@astryxdesign/theme-neutral": "0.7.0",
     "@huggingface/transformers": "4.3.1",
-    "@mediapipe/tasks-vision": "1.0.1",
     "@stylexjs/stylex": "0.19.1",
     "astro": "7.3.8",
     "lucide-react": "1.57.0",

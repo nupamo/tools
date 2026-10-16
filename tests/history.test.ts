@@ -35,6 +35,11 @@ test('history is bounded and preset input is validated',()=>{
 });
 
 test('preset values are clamped to safe UI ranges',()=>{
- const restored=restorePreset({...INITIAL,frameWidth:900,outlineWidth:100,glow:-80,focusX:20})!;
- assert.equal(restored.frameWidth,12);assert.equal(restored.outlineWidth,6);assert.equal(restored.glow,0);assert.equal(restored.focusX,1);
+ const restored=restorePreset({...INITIAL,frameWidth:900,glow:-80,focusX:20})!;
+ assert.equal(restored.frameWidth,12);assert.equal(restored.glow,0);assert.equal(restored.focusX,1);
+});
+
+test('old person and skin presets migrate without restoring removed features',()=>{
+ const restored=restorePreset({...INITIAL,focusMode:'person',subjectEnabled:true,background:'transparent',skinEnabled:true,smoothing:80})!;
+ assert.equal(restored.focusMode,'off');assert.equal('background' in restored,false);assert.equal('smoothing' in restored,false);
 });

@@ -12,11 +12,6 @@ Astryx 0.7.0 (core and Neutral theme)
 https://github.com/facebook/astryx
 Copyright (c) Meta Platforms, Inc. and affiliates. MIT License.
 
-MediaPipe Tasks Vision 1.0.1 and SelfieMulticlass revision 1
-https://github.com/google-ai-edge/mediapipe
-https://developers.google.com/edge/mediapipe/solutions/vision/image_segmenter
-Copyright The MediaPipe Authors. Apache License 2.0.
-
 Depth Anything V2 Small (ONNX Community conversion)
 https://github.com/DepthAnything/Depth-Anything-V2
 https://huggingface.co/onnx-community/depth-anything-v2-small-ONNX

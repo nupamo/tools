@@ -9,17 +9,17 @@ import ToolIcon from './ToolIcon';
 export default function PhotoEditor() {
   const e = usePhotoEditor(), input = useRef<HTMLInputElement>(null), [dragging, setDragging] = useState(false), picking = useRef(false);
   function choose() { if (input.current) { input.current.value = ''; input.current.click(); } }
-  const canPick = !e.locked && !!e.photo && e.compare === 'current' && e.edit[`${e.tab}Enabled` as keyof typeof e.edit] === true && (e.tab === 'flare' || (e.tab === 'focus' && (e.edit.focusMode === 'manual' || e.edit.focusMode === 'depth')));
+  const canPick = e.panel === 'advanced' && !e.locked && !!e.photo && e.compare === 'current' && e.edit[`${e.tab}Enabled` as keyof typeof e.edit] === true && (e.tab === 'flare' || (e.tab === 'focus' && (e.edit.focusMode === 'manual' || e.edit.focusMode === 'depth')));
   function pick(event: PointerEvent<HTMLDivElement>) {
     const canvas = e.currentCanvas.current, original = e.originalCanvas.current;
     if (!canvas || !original) return;
     const rect = canvas.getBoundingClientRect(), scale = Math.min(rect.width / canvas.width, rect.height / canvas.height);
     const left = rect.left + (rect.width - canvas.width * scale) / 2, top = rect.top + (rect.height - canvas.height * scale) / 2;
-    const g = frameGeometry(original.width, original.height, e.edit);
+    const g = frameGeometry(original.width, original.height, e.maskView === 'depth' ? { ...e.edit, frame: 'none' } : e.edit);
     const x = ((event.clientX - left) / scale - g.offsetX) / original.width, y = ((event.clientY - top) / scale - g.offsetY) / original.height;
     if (x >= 0 && x <= 1 && y >= 0 && y <= 1) e.pick(x, y);
   }
-  const original = e.originalCanvas.current, geometry = original ? frameGeometry(original.width, original.height, e.edit) : null;
+  const original = e.originalCanvas.current, geometry = original ? frameGeometry(original.width, original.height, e.maskView === 'depth' ? { ...e.edit, frame: 'none' } : e.edit) : null;
   const px = e.tab === 'flare' ? e.edit.flareX : e.edit.focusX, py = e.tab === 'flare' ? e.edit.flareY : e.edit.focusY;
   const working = e.loading || e.rendering || e.exporting;
   return <Theme theme={neutralTheme} mode="light"><section className="editor" aria-label="사진 보정">
@@ -47,7 +47,7 @@ export default function PhotoEditor() {
         </svg>}
       </div>
       {!e.photo && <button type="button" className="empty-upload" disabled={e.locked} onClick={choose}><ToolIcon name="imagePlus" size="lg" /><strong>{e.loading ? '사진 여는 중…' : '사진을 놓거나 선택하세요'}</strong><span>JPG · PNG · WebP · AVIF</span><small>최대 40MB · 2,400만 화소 · 긴 변 8,192px</small></button>}
-      {e.photo && <span className="preview-label">{e.compare === 'original' ? '원본' : e.compare === 'previous' ? '이전 편집' : e.maskView === 'depth' ? '깊이 지도' : e.maskView !== 'none' ? '분석 영역' : '보정'}</span>}
+      {e.photo && <span className="preview-label">{e.compare === 'original' ? '원본' : e.compare === 'previous' ? '이전 편집' : e.maskView === 'depth' ? '깊이 지도' : '보정'}</span>}
       {working && <span className="progress-chip" role="status">{e.exporting ? '원본 크기로 저장 중…' : e.loading ? '사진 여는 중…' : '미리보기 반영 중…'}</span>}
     </div><PhotoControls editor={e} /></div>
   </section></Theme>;

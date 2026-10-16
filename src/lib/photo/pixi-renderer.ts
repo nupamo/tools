@@ -3,17 +3,15 @@ import 'pixi.js/webworker';
 import { BlurFilter, BufferImageSource, DOMAdapter, Filter, GlProgram, Rectangle, RenderTexture, Sprite, Texture, TexturePool, Ticker, WebGLRenderer, WebWorkerAdapter } from 'pixi.js';
 import { AdjustmentFilter } from 'pixi-filters/adjustment';
 import { AdvancedBloomFilter } from 'pixi-filters/advanced-bloom';
-import { OutlineFilter } from 'pixi-filters/outline';
-import { addFrame, clamp, type Masks, type Plane, type Rendered } from './effects';
+import { addFrame, renderDepthMap, clamp, type Masks, type Plane, type Rendered } from './effects';
 import { effectiveState, type EditState } from './state';
 import { filterHalo, photoTiles, type PhotoTile } from './tiles';
 import { shaders, vertex } from './photo-shaders';
 
-export type MaskView = 'none' | 'person' | 'depth';
+export type MaskView = 'none' | 'depth';
 type UniformValue = { value: number | number[]; type: 'f32' | 'vec2<f32>' | 'vec3<f32>' | 'vec4<f32>' };
 const scalar = (value: number): UniformValue => ({ value, type: 'f32' });
 const vec = (...value: number[]): UniformValue => ({ value, type: `vec${value.length}<f32>` as UniformValue['type'] });
-const color = (hex: string) => [1, 3, 5].map(i => parseInt(hex.slice(i, i + 2), 16) / 255);
 
 function maskTexture(plane?: Plane) {
   if (!plane) return Texture.WHITE;
@@ -49,17 +47,17 @@ export class PixiPhotoRenderer {
   render(source: Uint8ClampedArray, w: number, h: number, raw: EditState, masks: Masks = {}, view: MaskView = 'none', coreLimit?: number): Rendered {
     if (w < 1 || h < 1 || source.length !== w * h * 4) throw new Error('사진 크기가 올바르지 않습니다.');
     if (this.renderer.gl.isContextLost()) throw new Error('GPU 연결이 끊겼습니다. 사진을 다시 선택해주세요.');
+    if (view === 'depth') return renderDepthMap(w, h, masks.depth);
     const s = effectiveState(raw);
     const active = s.exposure || s.contrast || s.highlights || s.shadows || s.warmth || s.tint || s.saturation || s.vibrance ||
-      s.glow || (s.focusMode !== 'off' && s.blur) || s.flare ||
-      (masks.person && (s.background !== 'original' || s.outlineWidth)) || view !== 'none';
+      s.glow || (s.focusMode !== 'off' && s.blur) || s.flare;
     if (!active) return addFrame(source.slice(), w, h, s);
     const result = new Uint8ClampedArray(source.length);
-    const textures = { person: maskTexture(masks.person), depth: maskTexture(masks.depth) };
+    const textures = { depth: maskTexture(masks.depth) };
     try {
       for (const tile of photoTiles(w, h, filterHalo(w, h, s), this.textureLimit, coreLimit)) {
         const tw = tile.right - tile.left;
-        const pixels = this.tile(source, w, h, tile, s, masks, textures, view);
+        const pixels = this.tile(source, w, h, tile, s, masks, textures);
         for (let y = 0; y < tile.height; y++) {
           const start = ((tile.y - tile.top + y) * tw + tile.x - tile.left) * 4;
           result.set(pixels.subarray(start, start + tile.width * 4), ((tile.y + y) * w + tile.x) * 4);
@@ -76,7 +74,7 @@ export class PixiPhotoRenderer {
   }
 
   private tile(source: Uint8ClampedArray, w: number, h: number, tile: PhotoTile, s: EditState, masks: Masks,
-    masksTex: { person: Texture; depth: Texture }, view: MaskView) {
+    masksTex: { depth: Texture }) {
     const tw = tile.right - tile.left, th = tile.bottom - tile.top, min = Math.min(w, h);
     const input = new Uint8Array(tw * th * 4);
     for (let y = 0; y < th; y++) {
@@ -88,19 +86,17 @@ export class PixiPhotoRenderer {
     const targets = new Set<RenderTexture>();
     const uniforms: Record<string, UniformValue> = {
       uShape: vec(w, h, tile.left, tile.top), uTile: vec(tw, th),
-      uPersonSize: vec(masksTex.person.width, masksTex.person.height), uDepthSize: vec(masksTex.depth.width, masksTex.depth.height),
-      uAvailable: vec(+!!masks.person, +!!masks.depth),
-      uFocus: vec(s.focusX, s.focusY, s.focusRadius / 200, s.focusRange / 200), uFocusMode: scalar(['off', 'manual', 'person', 'depth'].indexOf(s.focusMode)), uFocusDepth: scalar(s.depthFocus),
-      uBorder: vec(s.maskThreshold / 100, Math.max(.005, s.maskFeather / 100)),
+      uDepthSize: vec(masksTex.depth.width, masksTex.depth.height),
+      uHasDepth: scalar(+!!masks.depth),
+      uFocus: vec(s.focusX, s.focusY, s.focusRadius / 200, s.focusRange / 200), uFocusMode: scalar(['off', 'manual', 'depth'].indexOf(s.focusMode)), uFocusDepth: scalar(s.depthFocus),
       uTone: vec(s.highlights, s.shadows, s.warmth, s.tint), uVibrance: scalar(s.vibrance / 100),
-      uFlare: vec(s.flare / 100, s.flareSize / 100, s.flareX, s.flareY), uFlareStyle: scalar(['soft', 'star', 'ghost'].indexOf(s.flareStyle)),
-      uBackground: vec(...color(s.backgroundColor)), uOverlay: scalar(['none', 'person', 'depth'].indexOf(view)), uMix: scalar(0),
+      uFlare: vec(s.flare / 100, s.flareSize / 100, s.flareX, s.flareY), uMix: scalar(0), uFlareStyle: scalar(['soft', 'star', 'ghost'].indexOf(s.flareStyle)),
     };
     const custom = (name: keyof typeof shaders, other: Texture = Texture.WHITE, mix = 0) => new Filter({
       glProgram: GlProgram.from({ vertex, fragment: shaders[name], name: `photo-${name}` }),
       resources: {
         photoUniforms: { ...uniforms, uMix: scalar(mix) }, uOther: other.source,
-        uPerson: masksTex.person.source, uDepthMap: masksTex.depth.source,
+        uDepthMap: masksTex.depth.source,
       },
     });
     const pass = (texture: Texture, ...effects: Filter[]) => {
@@ -147,18 +143,6 @@ export class PixiPhotoRenderer {
       }
       if (s.focusMode !== 'off' && s.blur) current = advance(current, custom('focus', Texture.WHITE, min * s.blur / 100 * .035));
       if (s.flare) current = advance(current, custom('flare'));
-      if (masks.person && (s.background !== 'original' || s.outlineWidth)) {
-        const before = current, cutout = pass(current, custom('cutout'));
-        current = cutout;
-        if (s.outlineWidth) {
-          const line = pass(cutout, new OutlineFilter({ thickness: s.outlineWidth / 100 * min, color: s.outlineColor, quality: .5, knockout: s.background === 'original' }));
-          current = s.background === 'original' ? pass(before, custom('outlineOver', line)) : line;
-          retire(cutout, before); if (current !== line) retire(line);
-        }
-        if (s.background !== 'original') retire(before);
-        if (s.background === 'solid') current = advance(current, custom('background'));
-      }
-      if ((view === 'person' && masks.person) || (view === 'depth' && masks.depth)) current = advance(current, custom('overlay'));
       // The initial upload is already premultiplied; neutral paths avoid the GPU
       // entirely. extract.pixels returns premultiplied values for render targets.
       if (current === original) current = pass(current);
