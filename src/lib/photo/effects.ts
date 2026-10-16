@@ -162,7 +162,7 @@ export function frameGeometry(w: number, h: number, raw: EditState) {
   const pad = s.frame === 'none' ? 0 : Math.max(1, Math.round(Math.min(w, h) * s.frameWidth / 100));
   return { width: w + pad * 2, height: h + pad * (s.frame === 'polaroid' ? 4 : 2), offsetX: pad, offsetY: pad };
 }
-function addFrame(pixels: Uint8ClampedArray, w: number, h: number, s: EditState): Rendered {
+export function addFrame(pixels: Uint8ClampedArray, w: number, h: number, s: EditState): Rendered {
   const geometry = frameGeometry(w, h, s), { width, height, offsetX: pad } = geometry;
   if (s.frame === 'none') return { pixels, ...geometry };
   const output = new Uint8ClampedArray(width * height * 4), colour = rgb(s.frameColor);

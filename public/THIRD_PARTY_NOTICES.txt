@@ -1,3 +1,11 @@
+PixiJS 8.22.0
+https://github.com/pixijs/pixijs
+Copyright (c) 2013-2023 Mathew Groves, Chad Engler. MIT License (text below).
+
+PixiJS Filters 6.1.5
+https://github.com/pixijs/filters
+Copyright (c) 2013-2025 Mathew Groves, Chad Engler. MIT License (text below).
+
 Third-party components used by tools
 
 Astryx 0.7.0 (core and Neutral theme)

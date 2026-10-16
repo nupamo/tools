@@ -21,6 +21,7 @@ export function usePhotoEditor() {
   const [error, setError] = useState(''), [message, setMessage] = useState(''), [format, setFormat] = useState<'png' | 'jpeg'>('png');
   const [segmentation, setSegmentation] = useState<ModelState>({ status: 'idle', text: '사진을 선택하면 인물 분석' });
   const [depth, setDepth] = useState<ModelState>({ status: 'idle', text: '깊이 모델은 사용할 때만 로드' });
+  const [renderBackend, setRenderBackend] = useState('');
   const [depthSupported, setDepthSupported] = useState(false), [savedPreset, setSavedPreset] = useState<EditState | null>(null);
   const currentCanvas = useRef<HTMLCanvasElement>(null), originalCanvas = useRef<HTMLCanvasElement>(null), previousCanvas = useRef<HTMLCanvasElement>(null);
   const bitmap = useRef<ImageBitmap | null>(null), masks = useRef<Masks>({}), previewPixels = useRef<{pixels: Uint8ClampedArray; width: number; height: number} | null>(null);
@@ -62,6 +63,7 @@ export function usePhotoEditor() {
     next.onmessage = ({ data }: MessageEvent<WorkerResult>) => {
       if (data.kind === 'export') { if (data.error) exportResult.current?.reject(new Error(data.error)); else exportResult.current?.resolve(data); exportResult.current = null; return; }
       inFlight.current = false;
+      if (data.backend) setRenderBackend(data.backend);
       if (data.id === wanted.current) {
         try { if (data.error) throw new Error(data.error); if (data.image) paint(currentCanvas.current, data.image); if (data.previous) paint(previousCanvas.current, data.previous); }
         catch (cause) { setError(cause instanceof Error ? cause.message : '미리보기 표시 실패'); }
@@ -154,7 +156,7 @@ export function usePhotoEditor() {
       const ctx = canvas.getContext('2d', { willReadFrequently: true }); if (!ctx) throw new Error('사진을 처리할 수 없습니다.');
       ctx.drawImage(next, 0, 0, width, height); const pixels = ctx.getImageData(0, 0, width, height).data;
       generation.current++; if (segmentClient.current?.busy) segmentClient.current.dispose(); if (depthClient.current?.busy) depthClient.current.dispose(); masks.current = {}; bitmap.current?.close(); bitmap.current = next; next = null;
-      previewPixels.current = { pixels, width, height }; initializeEngine();
+      previewPixels.current = { pixels, width, height }; setRenderBackend(''); initializeEngine();
       const image = { pixels, width, height, offsetX: 0, offsetY: 0 }; paint(originalCanvas.current, image); paint(currentCanvas.current, image); paint(previousCanvas.current, image);
       draftBase.current = null; putHistory(newHistory()); setCompare('current'); setMaskView('none');
       const p = { name: file.name, width: bitmap.current.width, height: bitmap.current.height }; photoRef.current = p; setPhoto(p);
@@ -200,6 +202,6 @@ export function usePhotoEditor() {
     else if (tab === 'focus' && historyRef.current.present.focusMode === 'depth' && masks.current.depth) update({ focusX: x, focusY: y, depthFocus: sample(masks.current.depth, x, y) }, continuous);
     else if (tab === 'focus' && historyRef.current.present.focusMode === 'manual') update({ focusX: x, focusY: y }, continuous);
   }
-  return { photo, history, edit: history.present, tab, setTab, compare, setCompare, maskView, setMaskView, locked, loading, rendering, exporting, engineReady: !!worker.current, error, setError, message, format, setFormat, segmentation, depth, depthSupported, savedPreset, currentCanvas, originalCanvas, previousCanvas, update, finishEdit, undo, redo, resetGroup, resetAll, loadFile, analyzePerson, analyzeDepth, save, storePreset, applySavedPreset, pick, hasMasks: !!masks.current.person, hasDepth: !!masks.current.depth };
+  return { photo, history, edit: history.present, tab, setTab, compare, setCompare, maskView, setMaskView, locked, loading, rendering, exporting, engineReady: !!worker.current, renderBackend, error, setError, message, format, setFormat, segmentation, depth, depthSupported, savedPreset, currentCanvas, originalCanvas, previousCanvas, update, finishEdit, undo, redo, resetGroup, resetAll, loadFile, analyzePerson, analyzeDepth, save, storePreset, applySavedPreset, pick, hasMasks: !!masks.current.person, hasDepth: !!masks.current.depth };
 }
 export type PhotoEditorModel = ReturnType<typeof usePhotoEditor>;
