@@ -18,5 +18,5 @@ async function simulate(failAt:'init'|'inference'){
  return {delegates,messages,closed,imageClosed,modelFetch};
 }
 for(const failAt of ['init','inference'] as const)test(`MediaPipe worker retries ${failAt} GPU failure on CPU, copies masks, reuses model and frees results`,async()=>{
- const r=await simulate(failAt);assert.deepEqual(r.delegates,['GPU','CPU']);const results=r.messages.filter(x=>x.kind==='result');assert.equal(results.length,2);assert.equal(results[0].backend,'CPU');assert.deepEqual([...results[0].person.data],[0,1]);assert.ok(Math.abs(results[0].skin.data[1]-.9)<1e-6);assert.equal(r.closed,2);assert.equal(r.imageClosed,2);assert.equal(results[1].id,9);
+ const r=await simulate(failAt);assert.deepEqual(r.delegates,['GPU','CPU']);const results=r.messages.filter(x=>x.kind==='result');assert.equal(results.length,2);assert.equal(results[0].backend,'CPU');assert.deepEqual([...results[0].person.data],[0,1]);assert.equal('skin' in results[0],false);assert.equal(r.closed,2);assert.equal(r.imageClosed,2);assert.equal(results[1].id,9);
 });

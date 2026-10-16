@@ -6,11 +6,10 @@ export interface PhotoTile { x: number; y: number; width: number; height: number
 // only after all effects, so export uses the same pixel radii as the preview.
 export function filterHalo(w: number, h: number, s: EditState) {
   const min = Math.min(w, h);
-  const skin = s.smoothing > 0 ? Math.max(1, min / 500) * 4 : 0;
   const bloom = s.glow > 0 ? min * (.002 + s.glowRadius / 100 * .025) * 6 : 0;
   const focus = s.focusMode !== 'off' && s.blur > 0 ? min * s.blur / 100 * .035 : 0;
   const outline = min * s.outlineWidth / 100;
-  return Math.ceil(skin + bloom + focus + outline + 8);
+  return Math.ceil(bloom + focus + outline + 8);
 }
 
 export function photoTiles(w: number, h: number, halo: number, textureLimit: number, coreLimit = 1536): PhotoTile[] {

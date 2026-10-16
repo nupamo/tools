@@ -1,9 +1,8 @@
 export interface EditState {
-  lightEnabled: boolean; colorEnabled: boolean; skinEnabled: boolean; focusEnabled: boolean;
+  lightEnabled: boolean; colorEnabled: boolean; focusEnabled: boolean;
   subjectEnabled: boolean; glowEnabled: boolean; flareEnabled: boolean; frameEnabled: boolean;
   exposure: number; contrast: number; highlights: number; shadows: number;
   warmth: number; tint: number; saturation: number; vibrance: number;
-  smoothing: number; skinTone: number;
   focusMode: 'off' | 'manual' | 'person' | 'depth'; blur: number;
   focusX: number; focusY: number; focusRadius: number; focusRange: number; depthFocus: number;
   background: 'original' | 'transparent' | 'solid'; backgroundColor: string;
@@ -13,9 +12,9 @@ export interface EditState {
   frame: 'none' | 'solid' | 'double' | 'polaroid' | 'round'; frameWidth: number; frameColor: string;
 }
 export const INITIAL: EditState = {
-  lightEnabled: true, colorEnabled: true, skinEnabled: true, focusEnabled: true, subjectEnabled: true, glowEnabled: true, flareEnabled: true, frameEnabled: true,
+  lightEnabled: true, colorEnabled: true, focusEnabled: true, subjectEnabled: true, glowEnabled: true, flareEnabled: true, frameEnabled: true,
   exposure: 0, contrast: 0, highlights: 0, shadows: 0, warmth: 0, tint: 0, saturation: 0, vibrance: 0,
-  smoothing: 0, skinTone: 0, focusMode: 'off', blur: 45, focusX: .5, focusY: .5, focusRadius: 35, focusRange: 20, depthFocus: .5,
+  focusMode: 'off', blur: 45, focusX: .5, focusY: .5, focusRadius: 35, focusRange: 20, depthFocus: .5,
   background: 'original', backgroundColor: '#eeeeee', maskThreshold: 50, maskFeather: 18, outlineWidth: 0, outlineColor: '#ffffff',
   glow: 0, glowRadius: 35, flare: 0, flareSize: 40, flareX: .8, flareY: .2, flareStyle: 'soft',
   frame: 'none', frameWidth: 4, frameColor: '#ffffff',
@@ -28,17 +27,26 @@ export const PRESETS: Record<string, Partial<EditState>> = {
 };
 export const GROUPS = {
   light: ['exposure', 'contrast', 'highlights', 'shadows'], color: ['warmth', 'tint', 'saturation', 'vibrance'],
-  skin: ['smoothing', 'skinTone'], focus: ['focusMode', 'blur', 'focusX', 'focusY', 'focusRadius', 'focusRange', 'depthFocus'],
+  focus: ['focusMode', 'blur', 'focusX', 'focusY', 'focusRadius', 'focusRange', 'depthFocus'],
   subject: ['background', 'backgroundColor', 'maskThreshold', 'maskFeather', 'outlineWidth', 'outlineColor'],
   glow: ['glow', 'glowRadius'], flare: ['flare', 'flareSize', 'flareX', 'flareY', 'flareStyle'], frame: ['frame', 'frameWidth', 'frameColor'],
 } satisfies Record<string, (keyof EditState)[]>;
 export type Tab = keyof typeof GROUPS;
 export const equalEdits = (a: EditState, b: EditState) => JSON.stringify(a) === JSON.stringify(b);
-export interface EditHistory { past: EditState[]; present: EditState; future: EditState[]; }
+export interface EditHistory { past: EditState[]; present: EditState; future: EditState[]; group?: Tab; }
 export const newHistory = (): EditHistory => ({ past: [], present: { ...INITIAL }, future: [] });
-export function commitEdit(history: EditHistory, next: EditState, base = history.present): EditHistory {
+export function commitEdit(history: EditHistory, next: EditState, base = history.present, group?: Tab): EditHistory {
   if (equalEdits(next, base)) return { ...history, present: next };
-  return { past: [...history.past, { ...base }].slice(-50), present: { ...next }, future: [] };
+  if (group && history.group === group && history.past.length) {
+    if (equalEdits(next, history.past.at(-1)!)) return { past: history.past.slice(0, -1), present: { ...next }, future: [] };
+    return { ...history, present: { ...next }, future: [], group };
+  }
+  return { past: [...history.past, { ...base }].slice(-50), present: { ...next }, future: [], group };
+}
+/** A preset/global reset spanning groups is a separate compound operation. */
+export function editGroup(patch: Partial<EditState>): Tab | undefined {
+  const keys = Object.keys(patch);
+  return (Object.keys(GROUPS) as Tab[]).find(tab => keys.length > 0 && keys.every(key => key === `${tab}Enabled` || (GROUPS[tab] as readonly string[]).includes(key)));
 }
 export function undoEdit(h: EditHistory): EditHistory {
   if (!h.past.length) return h;
@@ -59,7 +67,7 @@ export function restorePreset(value: unknown): EditState | null {
     } else if (typeof INITIAL[key] === 'number') {
       if (typeof item !== 'number' || !Number.isFinite(item)) return null;
       const bounds: Partial<Record<keyof EditState, [number, number]>> = {
-        exposure: [-100,100], contrast: [-50,50], highlights: [-100,100], shadows: [-100,100], warmth: [-50,50], tint: [-50,50], saturation: [-100,100], vibrance: [-100,100], skinTone: [-50,50],
+        exposure: [-100,100], contrast: [-50,50], highlights: [-100,100], shadows: [-100,100], warmth: [-50,50], tint: [-50,50], saturation: [-100,100], vibrance: [-100,100],
         focusX: [0,1], focusY: [0,1], flareX: [0,1], flareY: [0,1], depthFocus: [0,1], focusRadius: [5,100], focusRange: [0,80], outlineWidth: [0,6], maskThreshold: [10,90], maskFeather: [1,40], frameWidth: [1,12],
       };
       const [lo,hi] = bounds[key] ?? [0,100];

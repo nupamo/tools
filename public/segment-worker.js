@@ -33,7 +33,7 @@ async function run(data) {
   const image = data.image;
   try {
     await initialize(data.id);
-    report(data.id, '인물·피부 영역 분석 중');
+    report(data.id, '인물 영역 분석 중');
     let result;
     try { result = segmenter.segment(image); }
     catch (error) {
@@ -48,10 +48,10 @@ async function run(data) {
       const channels = result.confidenceMasks;
       if (!channels || channels.length < 6) throw new Error('인물 마스크를 읽을 수 없습니다.');
       const width = channels[0].width, height = channels[0].height;
-      const background = channels[0].getAsFloat32Array(), body = channels[2].getAsFloat32Array(), face = channels[3].getAsFloat32Array();
-      const person = new Float32Array(width * height), skin = new Float32Array(width * height);
-      for (let i = 0; i < person.length; i++) { person[i] = Math.max(0, Math.min(1, 1 - background[i])); skin[i] = Math.max(0, Math.min(1, body[i] + face[i])); }
-      self.postMessage({ kind: 'result', id: data.id, backend, person: { data: person, width, height }, skin: { data: skin, width, height } }, [person.buffer, skin.buffer]);
+      const background = channels[0].getAsFloat32Array();
+      const person = new Float32Array(width * height);
+      for (let i = 0; i < person.length; i++) { person[i] = Math.max(0, Math.min(1, 1 - background[i])); }
+      self.postMessage({ kind: 'result', id: data.id, backend, person: { data: person, width, height } }, [person.buffer]);
     } finally { result.close(); }
   } catch (cause) { self.postMessage({ kind: 'error', id: data.id, error: cause instanceof Error ? cause.message : '인물 분석에 실패했습니다.' }); }
   finally { image?.close(); }

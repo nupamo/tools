@@ -11,12 +11,6 @@ test('neutral edit preserves exact original pixels and alpha, without mutating s
 test('one stop of exposure doubles midtones and preserves transparency',()=>{
  assert.deepEqual([...renderPhoto(new Uint8ClampedArray([40,50,60,125]),1,1,{...INITIAL,exposure:100}).pixels],[80,100,120,125]);
 });
-test('skin adjustment uses the model mask, not the colour of the pixels',()=>{
- const source=image(4,1),skin=plane(4,1,(x)=>x<2?1:0);
- const adjusted=renderPhoto(source,4,1,{...INITIAL,skinTone:30},{skin}).pixels;
- assert.ok(adjusted[0]>source[0]); assert.deepEqual(adjusted.slice(12),source.slice(12));
- assert.deepEqual(renderPhoto(source,4,1,{...INITIAL,skinTone:30}).pixels,source);
-});
 test('transparent background follows confidence, and never makes a transparent original opaque',()=>{
  const source=image(8,2,(x)=>[200,150,120,x===4?0:255]),person=plane(8,2,x=>x<3?0:1);
  const out=renderPhoto(source,8,2,{...INITIAL,background:'transparent'},{person});
@@ -43,11 +37,10 @@ test('depth focus protects matching depths in separated image positions',()=>{
  assert.notDeepEqual(out.slice((20*80+40)*4,(20*80+40)*4+4),source.slice((20*80+40)*4,(20*80+40)*4+4));
 });
 test('frames expand original dimensions rather than rescale the original content',()=>{
- for(const frame of ['solid','double','polaroid','round'] as const){
+ for(const frame of ['solid','double','polaroid'] as const){
   const source=image(80,60),out=renderPhoto(source,80,60,{...INITIAL,frame,frameWidth:5});
   assert.equal(out.width,86);assert.equal(out.height,frame==='polaroid'?72:66);
   const at=((out.offsetY+30)*out.width+out.offsetX+40)*4;assert.deepEqual([...out.pixels.slice(at,at+4)],[200,150,120,255]);
-  if(frame==='round')assert.equal(out.pixels[3],0);
  }
 });
 test('glow and each flare style alter colours, preserve alpha and never mutate original',()=>{
@@ -56,9 +49,9 @@ test('glow and each flare style alter colours, preserve alpha and never mutate o
  assert.deepEqual(source,copy);
 });
 test('model display overlays are isolated from the saved render',()=>{
- const source=image(4,4),skin=plane(4,4,()=>1);
- assert.notDeepEqual(renderPhoto(source,4,4,INITIAL,{skin},'skin').pixels,renderPhoto(source,4,4,INITIAL,{skin}).pixels);
- assert.deepEqual(renderPhoto(source,4,4,INITIAL,{skin}).pixels,source);
+ const source=image(4,4),person=plane(4,4,()=>1);
+ assert.notDeepEqual(renderPhoto(source,4,4,INITIAL,{person},'person').pixels,renderPhoto(source,4,4,INITIAL,{person}).pixels);
+ assert.deepEqual(renderPhoto(source,4,4,INITIAL,{person}).pixels,source);
 });
 test('bilinear mask sampling clamps boundaries and preserves middle values',()=>{
  const map=plane(2,2,(x,y)=>x===y?0:1);assert.equal(sample(map,.5,.5),.5);assert.equal(sample(map,-1,-1),0);assert.equal(sample(map,2,0),1);
@@ -71,4 +64,13 @@ test('blur handles one-pixel and thin images, and invalid image dimensions are r
 test('bypassing an effect preserves its settings while rendering its neutral state',()=>{
  const source=image(8,8),edit={...INITIAL,exposure:60,lightEnabled:false};assert.deepEqual(renderPhoto(source,8,8,edit).pixels,source);assert.equal(edit.exposure,60);
  const framed=renderPhoto(source,8,8,{...INITIAL,frame:'solid',frameEnabled:false});assert.equal(framed.width,8);assert.equal(framed.height,8);
+});
+
+test('rounded corners preserve image size and content without adding padding',()=>{
+ const source=image(80,60),copy=source.slice();
+ const out=renderPhoto(source,80,60,{...INITIAL,frame:'round',frameWidth:12,frameColor:'#123456'});
+ assert.equal(out.width,80);assert.equal(out.height,60);assert.equal(out.offsetX,0);assert.equal(out.offsetY,0);
+ assert.equal(out.pixels[3],0);assert.equal(out.pixels[(80*60-1)*4+3],0);
+ const center=(30*80+40)*4;assert.deepEqual(out.pixels.slice(center,center+4),source.slice(center,center+4));
+ assert.deepEqual(source,copy);
 });

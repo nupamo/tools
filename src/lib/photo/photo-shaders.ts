@@ -20,21 +20,18 @@ out vec4 finalColor;
 uniform sampler2D uTexture;
 uniform sampler2D uOther;
 uniform sampler2D uPerson;
-uniform sampler2D uSkinMask;
 uniform sampler2D uDepthMap;
 uniform vec4 uInputSize;
 uniform vec4 uInputClamp;
 uniform vec4 uShape;
 uniform vec2 uTile;
 uniform vec2 uPersonSize;
-uniform vec2 uSkinSize;
 uniform vec2 uDepthSize;
-uniform vec3 uAvailable;
+uniform vec2 uAvailable;
 uniform vec4 uFocus;
 uniform float uFocusMode;
 uniform float uFocusDepth;
 uniform vec2 uBorder;
-uniform vec2 uSkin;
 uniform vec4 uTone;
 uniform float uVibrance;
 uniform vec4 uFlare;
@@ -49,27 +46,18 @@ vec2 mapUV(vec2 uv, vec2 size) { return (clamp(uv, 0.0, 1.0) * (size - 1.0) + .5
 float personAt(vec2 uv) {
   return uAvailable.x * smoothstep(uBorder.x - uBorder.y, uBorder.x + uBorder.y, texture(uPerson, mapUV(uv,uPersonSize)).r);
 }
-float skinAt(vec2 uv) { return uAvailable.y * smoothstep(.15,.65,texture(uSkinMask,mapUV(uv,uSkinSize)).r); }
 float depthAt(vec2 uv) { return texture(uDepthMap,mapUV(uv,uDepthSize)).r; }
 float focusAt(vec2 uv) {
   if (uFocusMode < .5) return 0.0;
   if (uFocusMode < 1.5) return smoothstep(uFocus.z,uFocus.z+.2,length((uv-uFocus.xy)*uShape.xy/min(uShape.x,uShape.y)));
   if (uFocusMode < 2.5) return uAvailable.x * (1.0-personAt(uv));
-  return uAvailable.z * smoothstep(uFocus.w,uFocus.w+.22,abs(depthAt(uv)-uFocusDepth));
+  return uAvailable.y * smoothstep(uFocus.w,uFocus.w+.22,abs(depthAt(uv)-uFocusDepth));
 }
 vec3 straight(vec4 c) { return c.a > .0001 ? c.rgb/c.a : vec3(0.0); }
 vec4 photo(vec3 rgb, float alpha) { return vec4(clamp(rgb,0.0,1.0)*alpha,alpha); }
 `;
 
 export const shaders = {
-  skinWeight: `${common}
-void main() { finalColor = texture(uTexture,vTextureCoord)*skinAt(globalUV()); }`,
-  skinBlend: `${common}
-void main() {
-  vec4 c = texture(uTexture,vTextureCoord), soft = texture(uOther,localUV());
-  vec3 rgb = mix(straight(c),soft.a>.005 ? straight(soft) : straight(c),skinAt(globalUV())*uSkin.x*.8);
-  finalColor = photo(rgb+skinAt(globalUV())*uSkin.y*.3/255.0,c.a);
-}`,
   tone: `${common}
 void main() {
   vec4 c=texture(uTexture,vTextureCoord); vec3 rgb=straight(c);
@@ -122,8 +110,8 @@ void main() { vec4 c=texture(uTexture,vTextureCoord); finalColor=vec4(c.rgb+uBac
   overlay: `${common}
 void main() {
   vec4 c=texture(uTexture,vTextureCoord); vec2 uv=globalUV();
-  if(uOverlay>2.5) { finalColor=vec4(vec3(depthAt(uv)),1.0); return; }
-  float m=uOverlay<1.5 ? skinAt(uv) : personAt(uv);
+  if(uOverlay>1.5) { finalColor=vec4(vec3(depthAt(uv)),1.0); return; }
+  float m=personAt(uv);
   finalColor=photo(mix(straight(c),vec3(0.0,.745,0.0),m*.6),c.a);
 }`,
   flare: `${common}

@@ -1,6 +1,6 @@
 import { effectiveState, type EditState } from './state';
 export interface Plane { data: Float32Array; width: number; height: number; }
-export interface Masks { person?: Plane; skin?: Plane; depth?: Plane; }
+export interface Masks { person?: Plane; depth?: Plane; }
 export interface Rendered { pixels: Uint8ClampedArray; width: number; height: number; offsetX: number; offsetY: number; }
 export const clamp = (x: number, a = 0, b = 1) => Math.max(a, Math.min(b, x));
 export function smooth(a: number, b: number, x: number) { const t = clamp((x - a) / Math.max(.00001, b - a)); return t * t * (3 - 2 * t); }
@@ -73,22 +73,19 @@ export function distanceToSubject(mask: Uint8Array, w: number, h: number) {
   return d;
 }
 
-export function renderPhoto(source: Uint8ClampedArray, w: number, h: number, raw: EditState, masks: Masks = {}, showMask: 'none' | 'person' | 'skin' | 'depth' = 'none'): Rendered {
+export function renderPhoto(source: Uint8ClampedArray, w: number, h: number, raw: EditState, masks: Masks = {}, showMask: 'none' | 'person' | 'depth' = 'none'): Rendered {
   if (!Number.isInteger(w) || !Number.isInteger(h) || w < 1 || h < 1 || source.length !== w * h * 4) throw new Error('사진 크기가 올바르지 않습니다.');
   const s = effectiveState(raw);
   const min = Math.min(w, h), pixels = new Uint8ClampedArray(source.length);
-  const skin = masks.skin && (s.skinTone !== 0 || s.smoothing > 0) ? mapBytes(masks.skin, w, h, .4, .25) : undefined;
   const needsPerson = s.focusMode === 'person' || s.background !== 'original' || s.outlineWidth > 0 || showMask === 'person';
   const person = masks.person && needsPerson ? mapBytes(masks.person, w, h, s.maskThreshold / 100, Math.max(.005, s.maskFeather / 100)) : undefined;
-  const softened = skin && s.smoothing > 0 ? weightedBlur(source, w, h, Math.max(1, min / 500), skin) : source;
   const exposure = 2 ** (s.exposure / 100), contrast = 1 + s.contrast / 150, saturation = 1 + s.saturation / 100;
   for (let p = 0, i = 0; p < pixels.length; p += 4, i++) {
-    const sk = (skin?.[i] || 0) / 255, blend = sk * s.smoothing / 100 * .8;
     const l = (.2126 * source[p] + .7152 * source[p + 1] + .0722 * source[p + 2]) / 255;
     const tonal = s.shadows * .7 * (1 - smooth(.05, .65, l)) + s.highlights * .7 * smooth(.35, .95, l);
-    let r = (source[p] + (softened[p] - source[p]) * blend + sk * s.skinTone * .3 + tonal + s.warmth * .35 + s.tint * .15) * exposure;
-    let g = (source[p + 1] + (softened[p + 1] - source[p + 1]) * blend + sk * s.skinTone * .3 + tonal - s.tint * .2) * exposure;
-    let b = (source[p + 2] + (softened[p + 2] - source[p + 2]) * blend + sk * s.skinTone * .3 + tonal - s.warmth * .35 + s.tint * .15) * exposure;
+    let r = (source[p] + tonal + s.warmth * .35 + s.tint * .15) * exposure;
+    let g = (source[p + 1] + tonal - s.tint * .2) * exposure;
+    let b = (source[p + 2] + tonal - s.warmth * .35 + s.tint * .15) * exposure;
     r = (r - 128) * contrast + 128; g = (g - 128) * contrast + 128; b = (b - 128) * contrast + 128;
     const lum = .2126 * r + .7152 * g + .0722 * b;
     const chroma = (Math.max(r, g, b) - Math.min(r, g, b)) / 255;
@@ -148,7 +145,7 @@ export function renderPhoto(source: Uint8ClampedArray, w: number, h: number, raw
       }
     }
   }
-  const plane = showMask === 'skin' ? masks.skin : showMask === 'person' ? masks.person : showMask === 'depth' ? masks.depth : undefined;
+  const plane = showMask === 'person' ? masks.person : showMask === 'depth' ? masks.depth : undefined;
   if (plane) for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
     const p = (y * w + x) * 4, m = showMask === 'person' && person ? person[y * w + x] / 255 : clamp(sample(plane, (x + .5) / w, (y + .5) / h));
     if (showMask === 'depth') { pixels[p] = pixels[p + 1] = pixels[p + 2] = m * 255; pixels[p + 3] = 255; }
@@ -159,25 +156,28 @@ export function renderPhoto(source: Uint8ClampedArray, w: number, h: number, raw
 
 export function frameGeometry(w: number, h: number, raw: EditState) {
   const s = effectiveState(raw);
-  const pad = s.frame === 'none' ? 0 : Math.max(1, Math.round(Math.min(w, h) * s.frameWidth / 100));
+  const pad = (s.frame === 'none' || s.frame === 'round') ? 0 : Math.max(1, Math.round(Math.min(w, h) * s.frameWidth / 100));
   return { width: w + pad * 2, height: h + pad * (s.frame === 'polaroid' ? 4 : 2), offsetX: pad, offsetY: pad };
 }
 export function addFrame(pixels: Uint8ClampedArray, w: number, h: number, s: EditState): Rendered {
   const geometry = frameGeometry(w, h, s), { width, height, offsetX: pad } = geometry;
   if (s.frame === 'none') return { pixels, ...geometry };
+  if (s.frame === 'round') {
+    const output = pixels.slice(), radius = Math.min(w, h) * s.frameWidth / 100;
+    for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
+      const dx = Math.max(radius - (x + .5), x + .5 - (w - radius), 0);
+      const dy = Math.max(radius - (y + .5), y + .5 - (h - radius), 0);
+      output[(y * w + x) * 4 + 3] *= 1 - smooth(radius - .5, radius + .5, Math.hypot(dx, dy));
+    }
+    return { pixels: output, ...geometry };
+  }
   const output = new Uint8ClampedArray(width * height * 4), colour = rgb(s.frameColor);
-  const radius = s.frame === 'round' ? Math.min(w, h) * .07 : 0;
   for (let y = 0; y < height; y++) for (let x = 0; x < width; x++) {
     const p = (y * width + x) * 4;
     const border = Math.min(x, y, width - 1 - x, height - 1 - y);
     const doubleLine = s.frame === 'double' && border > pad * .35 && border < pad * .65;
     output[p] = doubleLine ? 80 : colour[0]; output[p + 1] = doubleLine ? 80 : colour[1]; output[p + 2] = doubleLine ? 80 : colour[2]; output[p + 3] = 255;
-    if (radius > 0) { const dx = Math.max(radius - x, x - (width - 1 - radius), 0), dy = Math.max(radius - y, y - (height - 1 - radius), 0); output[p + 3] *= 1 - smooth(radius - .5, radius + .5, Math.hypot(dx, dy)); }
   }
   for (let y = 0; y < h; y++) output.set(pixels.subarray(y * w * 4, (y + 1) * w * 4), ((y + pad) * width + pad) * 4);
-  if (radius > 0) for (let y = 0; y < height; y++) for (let x = 0; x < width; x++) {
-    const dx = Math.max(radius - x, x - (width - 1 - radius), 0), dy = Math.max(radius - y, y - (height - 1 - radius), 0);
-    output[(y * width + x) * 4 + 3] *= 1 - smooth(radius - .5, radius + .5, Math.hypot(dx, dy));
-  }
   return { pixels: output, ...geometry };
 }

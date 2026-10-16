@@ -12,7 +12,7 @@ export default function PhotoPresets({ editor: e }: { editor: PhotoEditorModel }
   const disabled = !e.photo || e.locked;
   return <>
     <Button icon={<ToolIcon name="wand" />} label="프리셋" size="sm" variant="ghost" isDisabled={disabled}
-      aria-haspopup="dialog" onClick={() => { e.finishEdit(); e.setCompare('current'); setIsOpen(true); }} />
+      aria-haspopup="dialog" onClick={() => { e.finishEffect(); e.setCompare('current'); setIsOpen(true); }} />
     <Dialog isOpen={isOpen} onOpenChange={setIsOpen} width={420}>
       <DialogHeader title="프리셋" onOpenChange={setIsOpen} />
       <div className="preset-dialog-content">
