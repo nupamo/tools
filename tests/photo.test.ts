@@ -38,9 +38,8 @@ test('blur handles one-pixel and thin images, and invalid image dimensions are r
  assert.throws(()=>renderPhoto(new Uint8ClampedArray(4),2,2,NEUTRAL),/크기/);
 });
 
-test('bypassing an effect preserves its settings while rendering its neutral state',()=>{
- const source=image(8,8),edit={...NEUTRAL,exposure:60,lightEnabled:false};assert.deepEqual(renderPhoto(source,8,8,edit).pixels,source);assert.equal(edit.exposure,60);
- const framed=renderPhoto(source,8,8,{...NEUTRAL,frame:'solid',frameEnabled:false});assert.equal(framed.width,8);assert.equal(framed.height,8);
+test('flare style none draws no light whatever its strength, and keeps the strength for later',()=>{
+ const source=image(8,8),edit={...NEUTRAL,flare:100,flareStyle:'none' as const};assert.deepEqual(renderPhoto(source,8,8,edit).pixels,source);assert.equal(edit.flare,100);
 });
 
 test('rounded corners preserve image size and content without adding padding',()=>{
@@ -52,11 +51,12 @@ test('rounded corners preserve image size and content without adding padding',()
  assert.deepEqual(source,copy);
 });
 
-test('new photos start untouched: glow and flare are off until enabled, then use their starting values',()=>{
- assert.equal(INITIAL.glow,20);assert.equal(INITIAL.glowRadius,20);assert.equal(INITIAL.flareStyle,'ghost');assert.equal(INITIAL.flare,50);assert.equal(INITIAL.flareSize,50);
- const src=image(40,30);assert.equal(INITIAL.glowEnabled,false);assert.equal(INITIAL.flareEnabled,false);
- assert.deepEqual(renderPhoto(src,40,30,INITIAL).pixels,src);
- assert.notDeepEqual(renderPhoto(src,40,30,{...INITIAL,glowEnabled:true,flareEnabled:true}).pixels,src);
+test('new photos start untouched: glow strength 0 and flare none',()=>{
+ assert.equal(INITIAL.glow,0);assert.equal(INITIAL.flareStyle,'none');assert.equal(INITIAL.focusMode,'off');assert.equal(INITIAL.frame,'none');
+ assert.equal(Object.keys(INITIAL).some(key=>key.endsWith('Enabled')),false);
+ const src=image(40,30);assert.deepEqual(renderPhoto(src,40,30,INITIAL).pixels,src);
+ assert.notDeepEqual(renderPhoto(src,40,30,{...INITIAL,glow:20}).pixels,src);
+ assert.notDeepEqual(renderPhoto(src,40,30,{...INITIAL,flareStyle:'ghost'}).pixels,src);
 });
 test('depth preview and export are plain grayscale at their own resolution, independent of effects and frames',()=>{
  const depth=plane(2,2,x=>x),edit={...INITIAL,exposure:100,frame:'solid' as const};
