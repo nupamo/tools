@@ -49,7 +49,7 @@ export function usePhotoEditor() {
   }
   function undo() { depthSelect.current = false; putHistory(undoEdit(historyRef.current)); setCompare('current'); }
   function redo() { depthSelect.current = false; putHistory(redoEdit(historyRef.current)); setCompare('current'); }
-  function resetGroup() { const patch: Partial<EditState> = { [`${tab}Enabled`]: true }; for (const key of GROUPS[tab]) (patch as Record<string, unknown>)[key] = INITIAL[key]; update(patch); }
+  function resetGroup() { const enabledKey = `${tab}Enabled` as keyof EditState, patch: Partial<EditState> = { [enabledKey]: INITIAL[enabledKey] }; for (const key of GROUPS[tab]) (patch as Record<string, unknown>)[key] = INITIAL[key]; update(patch); }
   function resetAll() { update({ ...INITIAL }); setMaskView('none'); }
   function pump() {
     if (inFlight.current || !worker.current || !pending.current) return;

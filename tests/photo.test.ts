@@ -52,10 +52,11 @@ test('rounded corners preserve image size and content without adding padding',()
  assert.deepEqual(source,copy);
 });
 
-test('new-photo defaults apply glow and ghost flare; disabling both truly bypasses them',()=>{
+test('new photos start untouched: glow and flare are off until enabled, then use their starting values',()=>{
  assert.equal(INITIAL.glow,20);assert.equal(INITIAL.glowRadius,20);assert.equal(INITIAL.flareStyle,'ghost');assert.equal(INITIAL.flare,50);assert.equal(INITIAL.flareSize,50);
- const src=image(40,30);assert.notDeepEqual(renderPhoto(src,40,30,INITIAL).pixels,src);
- assert.deepEqual(renderPhoto(src,40,30,{...INITIAL,glowEnabled:false,flareEnabled:false}).pixels,src);
+ const src=image(40,30);assert.equal(INITIAL.glowEnabled,false);assert.equal(INITIAL.flareEnabled,false);
+ assert.deepEqual(renderPhoto(src,40,30,INITIAL).pixels,src);
+ assert.notDeepEqual(renderPhoto(src,40,30,{...INITIAL,glowEnabled:true,flareEnabled:true}).pixels,src);
 });
 test('depth preview and export are plain grayscale at their own resolution, independent of effects and frames',()=>{
  const depth=plane(2,2,x=>x),edit={...INITIAL,exposure:100,frame:'solid' as const};

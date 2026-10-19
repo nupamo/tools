@@ -10,13 +10,16 @@ export interface EditState {
   frame: 'none' | 'solid' | 'double' | 'polaroid' | 'round'; frameWidth: number; frameColor: string;
 }
 export const INITIAL: EditState = {
-  lightEnabled: true, colorEnabled: true, focusEnabled: true, glowEnabled: true, flareEnabled: true, frameEnabled: true,
+  // Adjustments start neutral and enabled; overlay effects (glow, flare) start switched off.
+  // Their values are the starting strength used once the user turns them on.
+  lightEnabled: true, colorEnabled: true, focusEnabled: true, glowEnabled: false, flareEnabled: false, frameEnabled: true,
   exposure: 0, contrast: 0, highlights: 0, shadows: 0, warmth: 0, tint: 0, saturation: 0, vibrance: 0,
   focusMode: 'off', blur: 45, focusX: .5, focusY: .5, focusRadius: 35, focusRange: 20, depthFocus: .5,
   glow: 20, glowRadius: 20, flare: 50, flareSize: 50, flareX: .8, flareY: .2, flareStyle: 'ghost',
   frame: 'none', frameWidth: 4, frameColor: '#ffffff',
 };
-export const NEUTRAL: EditState = { ...INITIAL, glow: 0, flare: 0 };
+/** Every group enabled with values that leave pixels unchanged. */
+export const NEUTRAL: EditState = { ...INITIAL, glowEnabled: true, flareEnabled: true, glow: 0, flare: 0 };
 export const PRESETS: Record<string, Partial<EditState>> = {
   자연스럽게: { exposure: 6, contrast: 3, highlights: -10, shadows: 12, warmth: 2, tint: 0, saturation: 0, vibrance: 12 },
   따뜻하게: { exposure: 4, contrast: -5, highlights: -12, shadows: 8, warmth: 24, tint: 3, saturation: -3, vibrance: 8 },
