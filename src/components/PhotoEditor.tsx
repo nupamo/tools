@@ -9,7 +9,7 @@ import ToolIcon from './ToolIcon';
 export default function PhotoEditor() {
   const e = usePhotoEditor(), input = useRef<HTMLInputElement>(null), [dragging, setDragging] = useState(false), picking = useRef(false);
   function choose() { if (input.current) { input.current.value = ''; input.current.click(); } }
-  const canPick = e.panel === 'advanced' && !e.locked && !!e.photo && e.compare === 'current' && e.edit[`${e.tab}Enabled` as keyof typeof e.edit] === true && (e.tab === 'flare' || (e.tab === 'focus' && (e.edit.focusMode === 'manual' || e.edit.focusMode === 'depth')));
+  const canPick = e.panel === 'advanced' && !e.locked && !!e.photo && e.compare === 'current' && ((e.tab === 'flare' && e.edit.flareStyle !== 'none') || (e.tab === 'focus' && (e.edit.focusMode === 'manual' || e.edit.focusMode === 'depth')));
   function pick(event: PointerEvent<HTMLDivElement>) {
     const canvas = e.currentCanvas.current, original = e.originalCanvas.current;
     if (!canvas || !original) return;

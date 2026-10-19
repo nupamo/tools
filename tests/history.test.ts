@@ -3,7 +3,7 @@ import { test } from 'node:test';
 import { INITIAL, commitEdit, editGroup, newHistory, undoEdit, redoEdit, restorePreset } from '../src/lib/photo/state';
 test('multiple slider, toggle and position adjustments within one effect form one undo step',()=>{
  let h=newHistory();
- for(const patch of [{flare:30},{flare:60},{flareX:.3,flareY:.7},{flareEnabled:false},{flareEnabled:true},{flareStyle:'star' as const}]) h=commitEdit(h,{...h.present,...patch},undefined,editGroup(patch));
+ for(const patch of [{flare:30},{flare:60},{flareX:.3,flareY:.7},{flareStyle:'ghost' as const},{flareStyle:'none' as const},{flareStyle:'star' as const}]) h=commitEdit(h,{...h.present,...patch},undefined,editGroup(patch));
  assert.equal(h.past.length,1);assert.deepEqual(undoEdit(h).present,INITIAL);assert.deepEqual(redoEdit(undoEdit(h)).present,h.present);
 });
 test('switching effects closes the group; revisiting starts a new step',()=>{
@@ -37,6 +37,12 @@ test('history is bounded and preset input is validated',()=>{
 test('preset values are clamped to safe UI ranges',()=>{
  const restored=restorePreset({...INITIAL,frameWidth:900,glow:-80,focusX:20})!;
  assert.equal(restored.frameWidth,12);assert.equal(restored.glow,0);assert.equal(restored.focusX,1);
+});
+
+test('presets saved with the old 적용 switches drop the switches and reset switched-off groups',()=>{
+ const restored=restorePreset({...INITIAL,lightEnabled:false,exposure:40,colorEnabled:true,warmth:12,glowEnabled:false,glow:20,flareEnabled:true,flare:50,flareStyle:'ghost'})!;
+ assert.equal(restored.exposure,0);assert.equal(restored.warmth,12);assert.equal(restored.glow,0);assert.equal(restored.flareStyle,'ghost');
+ assert.equal('lightEnabled' in restored,false);
 });
 
 test('old person and skin presets migrate without restoring removed features',()=>{

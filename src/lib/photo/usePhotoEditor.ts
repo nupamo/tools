@@ -44,12 +44,12 @@ export function usePhotoEditor() {
     putHistory(commitEdit(historyRef.current, { ...historyRef.current.present, ...patch }, undefined, editGroup(patch)));
     if (patch.focusMode && patch.focusMode !== 'depth') depthSelect.current = false;
     setCompare('current'); setMessage('');
-    if (Object.entries(patch).some(([key, value]) => key.endsWith('Enabled') && value === false)) setMaskView('none');
+    if (patch.focusMode && patch.focusMode !== 'depth') setMaskView('none');
     if (patch.frame === 'round') setFormat('png');
   }
   function undo() { depthSelect.current = false; putHistory(undoEdit(historyRef.current)); setCompare('current'); }
   function redo() { depthSelect.current = false; putHistory(redoEdit(historyRef.current)); setCompare('current'); }
-  function resetGroup() { const patch: Partial<EditState> = { [`${tab}Enabled`]: true }; for (const key of GROUPS[tab]) (patch as Record<string, unknown>)[key] = INITIAL[key]; update(patch); }
+  function resetGroup() { const patch: Partial<EditState> = {}; for (const key of GROUPS[tab]) (patch as Record<string, unknown>)[key] = INITIAL[key]; update(patch); }
   function resetAll() { update({ ...INITIAL }); setMaskView('none'); }
   function pump() {
     if (inFlight.current || !worker.current || !pending.current) return;
@@ -188,7 +188,7 @@ export function usePhotoEditor() {
   function deletePreset(id: string) { persistPresets(savedPresets.filter(preset => preset.id !== id), '프리셋을 삭제했습니다.'); }
   function applyPreset(settings: EditState) {
     finishEffect(); setMaskView('none'); update({ ...settings });
-    if (settings.focusEnabled && settings.focusMode === 'depth' && !masks.current.depth) {
+    if (settings.focusMode === 'depth' && !masks.current.depth) {
       setMessage(depthSupported ? '프리셋 적용 · 깊이 모델 준비 중' : '프리셋 적용 · 깊이 초점은 WebGPU가 필요합니다.');
     }
   }

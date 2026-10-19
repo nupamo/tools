@@ -1,22 +1,20 @@
 export interface EditState {
-  lightEnabled: boolean; colorEnabled: boolean; focusEnabled: boolean;
-  glowEnabled: boolean; flareEnabled: boolean; frameEnabled: boolean;
   exposure: number; contrast: number; highlights: number; shadows: number;
   warmth: number; tint: number; saturation: number; vibrance: number;
   focusMode: 'off' | 'manual' | 'depth'; blur: number;
   focusX: number; focusY: number; focusRadius: number; focusRange: number; depthFocus: number;
   glow: number; glowRadius: number;
-  flare: number; flareSize: number; flareX: number; flareY: number; flareStyle: 'soft' | 'star' | 'ghost';
+  flare: number; flareSize: number; flareX: number; flareY: number; flareStyle: 'none' | 'soft' | 'star' | 'ghost';
   frame: 'none' | 'solid' | 'double' | 'polaroid' | 'round'; frameWidth: number; frameColor: string;
 }
 export const INITIAL: EditState = {
-  lightEnabled: true, colorEnabled: true, focusEnabled: true, glowEnabled: true, flareEnabled: true, frameEnabled: true,
   exposure: 0, contrast: 0, highlights: 0, shadows: 0, warmth: 0, tint: 0, saturation: 0, vibrance: 0,
   focusMode: 'off', blur: 45, focusX: .5, focusY: .5, focusRadius: 35, focusRange: 20, depthFocus: .5,
-  glow: 20, glowRadius: 20, flare: 50, flareSize: 50, flareX: .8, flareY: .2, flareStyle: 'ghost',
+  glow: 0, glowRadius: 20, flare: 50, flareSize: 50, flareX: .8, flareY: .2, flareStyle: 'none',
   frame: 'none', frameWidth: 4, frameColor: '#ffffff',
 };
-export const NEUTRAL: EditState = { ...INITIAL, glow: 0, flare: 0 };
+/** Each group's default is its "none" choice or zero strength, so a new photo renders unchanged. */
+export const NEUTRAL: EditState = INITIAL;
 export const PRESETS: Record<string, Partial<EditState>> = {
   자연스럽게: { exposure: 6, contrast: 3, highlights: -10, shadows: 12, warmth: 2, tint: 0, saturation: 0, vibrance: 12 },
   따뜻하게: { exposure: 4, contrast: -5, highlights: -12, shadows: 8, warmth: 24, tint: 3, saturation: -3, vibrance: 8 },
@@ -43,7 +41,7 @@ export function commitEdit(history: EditHistory, next: EditState, base = history
 /** A preset/global reset spanning groups is a separate compound operation. */
 export function editGroup(patch: Partial<EditState>): Tab | undefined {
   const keys = Object.keys(patch);
-  return (Object.keys(GROUPS) as Tab[]).find(tab => keys.length > 0 && keys.every(key => key === `${tab}Enabled` || (GROUPS[tab] as readonly string[]).includes(key)));
+  return (Object.keys(GROUPS) as Tab[]).find(tab => keys.length > 0 && keys.every(key => (GROUPS[tab] as readonly string[]).includes(key)));
 }
 export function undoEdit(h: EditHistory): EditHistory {
   if (!h.past.length) return h;
@@ -58,10 +56,7 @@ export function restorePreset(value: unknown): EditState | null {
   const v = value as Record<string, unknown>, result = { ...INITIAL };
   for (const key of Object.keys(INITIAL) as (keyof EditState)[]) {
     const item = key === 'focusMode' && v[key] === 'person' ? 'off' : v[key];
-    if (typeof INITIAL[key] === 'boolean') {
-      if (typeof item !== 'boolean') return null;
-      (result as unknown as Record<string, unknown>)[key] = item;
-    } else if (typeof INITIAL[key] === 'number') {
+    if (typeof INITIAL[key] === 'number') {
       if (typeof item !== 'number' || !Number.isFinite(item)) return null;
       const bounds: Partial<Record<keyof EditState, [number, number]>> = {
         exposure: [-100,100], contrast: [-50,50], highlights: [-100,100], shadows: [-100,100], warmth: [-50,50], tint: [-50,50], saturation: [-100,100], vibrance: [-100,100],
@@ -73,20 +68,19 @@ export function restorePreset(value: unknown): EditState | null {
       if (typeof item !== 'string' || !/^#[0-9a-f]{6}$/i.test(item)) return null;
       (result as unknown as Record<string, unknown>)[key] = item;
     } else {
-      const enums: Partial<Record<keyof EditState, string[]>> = { focusMode: ['off', 'manual', 'depth'], frame: ['none', 'solid', 'double', 'polaroid', 'round'], flareStyle: ['soft', 'star', 'ghost'] };
+      const enums: Partial<Record<keyof EditState, string[]>> = { focusMode: ['off', 'manual', 'depth'], frame: ['none', 'solid', 'double', 'polaroid', 'round'], flareStyle: ['none', 'soft', 'star', 'ghost'] };
       if (typeof item !== 'string' || !enums[key]?.includes(item)) return null;
       (result as unknown as Record<string, unknown>)[key] = item;
     }
   }
   for (const k of ['focusX', 'focusY', 'depthFocus', 'flareX', 'flareY'] as const) result[k] = Math.max(0, Math.min(1, result[k]));
+  // Presets saved before the per-group "적용" switch was removed: a switched-off group becomes its default.
+  for (const tab of Object.keys(GROUPS) as Tab[])
+    if (v[`${tab}Enabled`] === false) for (const key of GROUPS[tab]) (result as unknown as Record<string, unknown>)[key] = INITIAL[key];
   return result;
 }
 
+/** Renderer view of the edit: flare style "none" draws no light. */
 export function effectiveState(raw: EditState): EditState {
-  const result = { ...raw };
-  for (const tab of Object.keys(GROUPS) as Tab[]) {
-    if (raw[`${tab}Enabled` as keyof EditState] === false)
-      for (const key of GROUPS[tab]) (result as unknown as Record<string, unknown>)[key] = NEUTRAL[key];
-  }
-  return result;
+  return raw.flareStyle === 'none' ? { ...raw, flare: 0, flareStyle: 'soft' } : raw;
 }
