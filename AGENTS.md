@@ -2,7 +2,7 @@
 
 ## Product contract
 
-- Keep the home page to a name, one-line description and links with tool name, description and category.
+- Keep the home page to a name, one-line description and tool tiles with icon, name and description. Below a "다른 프로젝트" divider, list links to other projects (not tools) from `projects` in `src/data/tools.ts`.
 - List only working tools. No marketing sections, mock statistics or coming-soon tools.
 - Tool pages show server use and exact on-device model directly under the title. Say “none” when no model is used.
 - Desktop workspaces fit the viewport; mobile may scroll. Keep actions reachable at short viewport heights.
