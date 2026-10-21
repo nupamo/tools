@@ -1,4 +1,5 @@
 import type { EditState } from './state';
+import { photoError } from './messages';
 
 export interface PhotoTile { x: number; y: number; width: number; height: number; left: number; top: number; right: number; bottom: number; }
 
@@ -13,7 +14,7 @@ export function filterHalo(w: number, h: number, s: EditState) {
 
 export function photoTiles(w: number, h: number, halo: number, textureLimit: number, coreLimit = 1536): PhotoTile[] {
   const core = Math.min(coreLimit, textureLimit - 2 * halo);
-  if (core < 64) throw new Error('이 기기의 GPU로 처리하기에는 효과 범위가 너무 큽니다. 효과 강도나 사진 크기를 줄여주세요.');
+  if (core < 64) throw photoError('effectTooLarge');
   const tiles: PhotoTile[] = [];
   for (let y = 0; y < h; y += core) for (let x = 0; x < w; x += core) {
     const width = Math.min(core, w - x), height = Math.min(core, h - y);

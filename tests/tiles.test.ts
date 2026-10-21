@@ -22,5 +22,5 @@ test('tile overlap includes the combined blur and glow chain at original resolut
   assert(full > (small - 8) * 4.9);
   const tiles = photoTiles(6000, 4000, full, 4096);
   for (const t of tiles) assert(t.right - t.left <= 4096 && t.bottom - t.top <= 4096);
-  assert.throws(() => photoTiles(6000, 4000, 1020, 2048), /효과 범위/);
+  assert.throws(() => photoTiles(6000, 4000, 1020, 2048), /effectTooLarge/);
 });

@@ -35,7 +35,7 @@ test('bilinear mask sampling clamps boundaries and preserves middle values',()=>
 });
 test('blur handles one-pixel and thin images, and invalid image dimensions are rejected',()=>{
  for(const [w,h]of [[1,1],[1,7],[7,1]]){const source=image(w,h,()=>[90,90,90,90]);assert.deepEqual(boxBlur(source,w,h,12),source);assert.equal(renderPhoto(source,w,h,{...NEUTRAL,glow:100,focusMode:'manual',blur:100}).pixels.length,source.length);}
- assert.throws(()=>renderPhoto(new Uint8ClampedArray(4),2,2,NEUTRAL),/크기/);
+ assert.throws(()=>renderPhoto(new Uint8ClampedArray(4),2,2,NEUTRAL),/photoSize/);
 });
 
 test('flare style none draws no light whatever its strength, and keeps the strength for later',()=>{
@@ -66,5 +66,5 @@ test('depth preview and export are plain grayscale at their own resolution, inde
  assert.deepEqual([...preview.pixels.slice(0,8)],[64,64,64,255,191,191,191,255]);
  for(let i=0;i<exported.pixels.length;i+=4){assert.equal(exported.pixels[i],exported.pixels[i+1]);assert.equal(exported.pixels[i],exported.pixels[i+2]);assert.equal(exported.pixels[i+3],255);}
  assert.deepEqual(exported.pixels,renderPhoto(image(6,4),6,4,NEUTRAL,{depth},'depth').pixels);
- assert.throws(()=>renderPhoto(image(2,2),2,2,edit,{},'depth'),/깊이 분석/);
+ assert.throws(()=>renderPhoto(image(2,2),2,2,edit,{},'depth'),/depthFirst/);
 });

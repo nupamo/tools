@@ -1,24 +1,33 @@
 ---
 import '../styles/global.css';
-interface Props { title: string; description: string; workspace?: boolean; home?: boolean; }
-const { title, description, workspace = false, home = false } = Astro.props;
-const base = import.meta.env.BASE_URL;
+import { LOCALES, LOCALE_NAMES, getMessages, localePath, type Locale } from '../i18n';
+interface Props { title: string; description: string; locale: Locale; path?: string; workspace?: boolean; home?: boolean; }
+const { title, description, locale, path = '', workspace = false, home = false } = Astro.props;
+const t = getMessages(locale).site;
+const site = Astro.site ?? Astro.url;
 ---
 <!doctype html>
-<html lang="ko" data-theme="light" data-astryx-theme="neutral">
+<html lang={locale} data-astryx-theme="neutral">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="description" content={description} />
-    <meta name="color-scheme" content="light" />
-    <link rel="icon" type="image/svg+xml" href={`${base}favicon.svg`} />
+    <meta name="color-scheme" content="light dark" />
+    <link rel="icon" type="image/svg+xml" href={`${import.meta.env.BASE_URL}favicon.svg`} />
+    {LOCALES.map(l => <link rel="alternate" hreflang={l} href={new URL(localePath(l, path), site).href} />)}
+    <link rel="alternate" hreflang="x-default" href={new URL(localePath('ko', path), site).href} />
     <title>{title === 'tools' ? title : `${title} · tools`}</title>
   </head>
   <body class:list={{ 'workspace-page': workspace, 'home-page': home }}>
-    <a href="#main" class="skip-link">본문으로 이동</a>
+    <a href="#main" class="skip-link">{t.skip}</a>
     <header class="site-header">
-      <a class="wordmark" href={base} aria-label="tools 홈">tools<span aria-hidden="true">.</span></a>
-      <slot name="header-nav"><a class="header-link" href={base}>도구 목록</a></slot>
+      <a class="wordmark" href={localePath(locale)} aria-label={t.home}>tools<span aria-hidden="true">.</span></a>
+      <div class="header-actions">
+        <slot name="header-nav"><a class="header-link" href={localePath(locale)}>{t.toolList}</a></slot>
+        <nav class="language-switch" aria-label={t.language}>
+          {LOCALES.map(l => <a href={localePath(l, path)} hreflang={l} lang={l} title={LOCALE_NAMES[l].name} aria-label={LOCALE_NAMES[l].name} aria-current={l === locale ? 'page' : undefined}>{LOCALE_NAMES[l].short}</a>)}
+        </nav>
+      </div>
     </header>
     <main id="main"><slot /></main>
   </body>

@@ -8,7 +8,7 @@ test('multiple named presets survive reload; replacing or deleting one preserves
  assert.notEqual(list[0].id,list[1].id);writePresets(disk,list);assert.deepEqual(readPresets(disk),list);
  list=replacePreset(list,list[0].id,{...INITIAL,exposure:60});assert.equal(list[0].settings.exposure,60);assert.equal(list[1].settings.exposure,40);
  writePresets(disk,list.slice(1));assert.deepEqual(readPresets(disk),list.slice(1));
- assert.throws(()=>addPreset(list,'  풍경  ',INITIAL),/같은 이름/);assert.throws(()=>addPreset(list,'  ',INITIAL),/이름/);
+ assert.throws(()=>addPreset(list,'  풍경  ',INITIAL),/presetNameTaken/);assert.throws(()=>addPreset(list,'  ',INITIAL),/presetNameRequired/);
 });
 test('legacy single preset migrates once and removed person settings are ignored',()=>{
  const disk=storage();disk.setItem('tools-photo-preset-v1',JSON.stringify({...INITIAL,focusMode:'person',background:'transparent',exposure:35}));

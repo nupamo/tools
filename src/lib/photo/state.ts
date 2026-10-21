@@ -15,11 +15,12 @@ export const INITIAL: EditState = {
 };
 /** Each group's default is its "none" choice or zero strength, so a new photo renders unchanged. */
 export const NEUTRAL: EditState = INITIAL;
-export const PRESETS: Record<string, Partial<EditState>> = {
-  자연스럽게: { exposure: 6, contrast: 3, highlights: -10, shadows: 12, warmth: 2, tint: 0, saturation: 0, vibrance: 12 },
-  따뜻하게: { exposure: 4, contrast: -5, highlights: -12, shadows: 8, warmth: 24, tint: 3, saturation: -3, vibrance: 8 },
-  차분하게: { exposure: 0, contrast: -10, highlights: -15, shadows: 15, warmth: -12, tint: 3, saturation: -18, vibrance: 0 },
-  흑백: { exposure: 0, contrast: 15, highlights: -8, shadows: 5, warmth: 0, tint: 0, saturation: -100, vibrance: 0 },
+export type PresetId = 'natural' | 'warm' | 'calm' | 'mono';
+export const PRESETS: Record<PresetId, Partial<EditState>> = {
+  natural: { exposure: 6, contrast: 3, highlights: -10, shadows: 12, warmth: 2, tint: 0, saturation: 0, vibrance: 12 },
+  warm: { exposure: 4, contrast: -5, highlights: -12, shadows: 8, warmth: 24, tint: 3, saturation: -3, vibrance: 8 },
+  calm: { exposure: 0, contrast: -10, highlights: -15, shadows: 15, warmth: -12, tint: 3, saturation: -18, vibrance: 0 },
+  mono: { exposure: 0, contrast: 15, highlights: -8, shadows: 5, warmth: 0, tint: 0, saturation: -100, vibrance: 0 },
 };
 export const GROUPS = {
   light: ['exposure', 'contrast', 'highlights', 'shadows'], color: ['warmth', 'tint', 'saturation', 'vibrance'],

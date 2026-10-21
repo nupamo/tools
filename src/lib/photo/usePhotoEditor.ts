@@ -4,23 +4,27 @@ import { addPreset, readPresets, replacePreset, writePresets, type SavedPreset }
 import { sample, type Masks, type Rendered } from './effects';
 import { ModelClient, type ModelProgress } from './model-client';
 import type { WorkerRequest, WorkerResult, MaskView } from './worker';
+import { isPhotoMessage, photoError, type PhotoMessage } from './messages';
 export type ModelState = { status: 'idle' | 'loading' | 'ready' | 'error'; text: string; progress?: number; backend?: string };
 type Photo = { name: string; width: number; height: number };
 type Preview = Extract<WorkerRequest, {kind: 'preview'}>;
 const paint = (canvas: HTMLCanvasElement | null, image: Rendered) => {
   if (!canvas) return;
   canvas.width = image.width; canvas.height = image.height;
-  const ctx = canvas.getContext('2d'); if (!ctx) throw new Error('사진을 표시할 수 없습니다.');
+  const ctx = canvas.getContext('2d'); if (!ctx) throw photoError('canvasUnavailable');
   ctx.putImageData(new ImageData(new Uint8ClampedArray(image.pixels), image.width, image.height), 0, 0);
 };
-export function usePhotoEditor() {
+// Status text: code-keyed messages in the page language. Unknown errors (browser or library text) pass through.
+export type PhotoStatusText = Record<PhotoMessage, string>;
+export function usePhotoEditor(t: PhotoStatusText) {
+  const say = (cause: unknown, fallback: PhotoMessage) => cause instanceof Error && cause.message ? (isPhotoMessage(cause.message) ? t[cause.message] : cause.message) : t[fallback];
   const [photo, setPhoto] = useState<Photo | null>(null), [history, setHistory] = useState<EditHistory>(newHistory);
   const historyRef = useRef(history);
   const [tab, setTabState] = useState<Tab>('light'), [compare, setCompare] = useState<'current' | 'original' | 'previous'>('current');
   const [maskView, setMaskView] = useState<MaskView>('none'), [revision, setRevision] = useState(0);
   const [loading, setLoading] = useState(false), [rendering, setRendering] = useState(false), [exporting, setExporting] = useState(false);
   const [error, setError] = useState(''), [message, setMessage] = useState(''), [format, setFormat] = useState<'png' | 'jpeg'>('png');
-  const [depth, setDepth] = useState<ModelState>({ status: 'idle', text: '깊이 모델은 사용할 때만 로드' });
+  const [depth, setDepth] = useState<ModelState>({ status: 'idle', text: t.depthIdle });
   const [renderBackend, setRenderBackend] = useState('');
   const depthPending = useRef<number | null>(null), depthSelect = useRef(false), tabRef = useRef<Tab>('light');
   const [depthSupported, setDepthSupported] = useState(false), [savedPresets, setSavedPresets] = useState<SavedPreset[]>([]);
@@ -65,14 +69,14 @@ export function usePhotoEditor() {
       if (data.backend) setRenderBackend(data.backend);
       if (data.id === wanted.current) {
         try { if (data.error) throw new Error(data.error); if (data.image) paint(currentCanvas.current, data.image); if (data.previous) paint(previousCanvas.current, data.previous); }
-        catch (cause) { setError(cause instanceof Error ? cause.message : '미리보기 표시 실패'); }
+        catch (cause) { setError(say(cause, 'previewFailed')); }
         setRendering(false);
       }
       pump();
     };
     next.onerror = () => {
-      setError('사진 처리에 실패했습니다. 사진을 다시 선택해주세요.'); setRendering(false);
-      exportResult.current?.reject(new Error('사진 처리에 실패했습니다.')); exportResult.current = null;
+      setError(t.photoProcessFailedRetry); setRendering(false);
+      exportResult.current?.reject(photoError('photoProcessFailed')); exportResult.current = null;
       next.terminate(); worker.current = null; pending.current = null; inFlight.current = false;
     };
     worker.current = next;
@@ -92,22 +96,22 @@ export function usePhotoEditor() {
     const gen = generation.current;
     if (depthPending.current === gen) return;
     depthPending.current = gen;
-    setDepth({ status: 'loading', text: '깊이 모델 준비 중' });
+    setDepth({ status: 'loading', text: t.depthPreparing });
     try {
       depthClient.current ??= new ModelClient(() => new Worker(new URL('./depth.worker.ts', import.meta.url), { type: 'module' }));
       const p = previewPixels.current!, pixels = p.pixels.slice();
-      const result = await depthClient.current.run({ pixels, width: p.width, height: p.height }, [pixels.buffer], (progress: ModelProgress) => { if (alive.current && gen === generation.current) setDepth({ status: 'loading', ...progress }); });
+      const result = await depthClient.current.run({ pixels, width: p.width, height: p.height }, [pixels.buffer], (progress: ModelProgress) => { if (alive.current && gen === generation.current) setDepth({ status: 'loading', text: isPhotoMessage(progress.text) ? t[progress.text] : progress.text, progress: progress.progress }); });
       if (!alive.current || gen !== generation.current) return;
-      if (!result.depth) throw new Error('깊이 지도가 없습니다.');
+      if (!result.depth) throw photoError('depthMissing');
       acceptMasks({ depth: result.depth });
-      setDepth({ status: 'ready', text: '깊이 분석 완료', backend: 'WebGPU' });
+      setDepth({ status: 'ready', text: t.depthReady, backend: 'WebGPU' });
       if (depthSelect.current) update({ focusMode: 'depth', depthFocus: sample(result.depth, historyRef.current.present.focusX, historyRef.current.present.focusY) });
-    } catch (cause) { if (alive.current && gen === generation.current) setDepth({ status: 'error', text: cause instanceof Error ? cause.message : '깊이 분석 실패' }); }
+    } catch (cause) { if (alive.current && gen === generation.current) setDepth({ status: 'error', text: say(cause, 'depthFailed') }); }
     finally { if (depthPending.current === gen) depthPending.current = null; }
   }
   useEffect(() => {
     alive.current = true;
-    try { setSavedPresets(readPresets(localStorage)); } catch { setError('저장한 프리셋을 읽지 못했습니다. 브라우저 저장소를 확인해주세요.'); }
+    try { setSavedPresets(readPresets(localStorage, t.legacyPresetName)); } catch { setError(t.presetsStorageUnreadable); }
     void (async () => { try { const adapter = await navigator.gpu?.requestAdapter(); if (alive.current) setDepthSupported(!!adapter && !adapter.info.isFallbackAdapter); } catch {} })();
     const release = () => { setCompare('current'); };
     const visibility = () => { if (document.hidden) release(); };
@@ -134,25 +138,25 @@ export function usePhotoEditor() {
   async function loadFile(file: File) {
     if (locked) return;
     setError(''); setMessage('');
-    if (!/\.(jpe?g|png|webp|avif)$/i.test(file.name)) { setError('JPG, PNG, WebP, AVIF 사진을 선택해주세요.'); return; }
-    if (file.size > 40 * 1024 * 1024) { setError('40MB 이하의 사진을 선택해주세요.'); return; }
+    if (!/\.(jpe?g|png|webp|avif)$/i.test(file.name)) { setError(t.fileType); return; }
+    if (file.size > 40 * 1024 * 1024) { setError(t.fileTooLarge); return; }
     const ticket = ++loadTicket.current; setLoading(true); let next: ImageBitmap | null = null;
     try {
       next = await createImageBitmap(file, { imageOrientation: 'from-image' });
-      if (next.width * next.height > 24_000_000 || Math.max(next.width, next.height) > 8192) throw new Error('최대 2,400만 화소, 긴 변 8,192px까지 지원합니다.');
+      if (next.width * next.height > 24_000_000 || Math.max(next.width, next.height) > 8192) throw photoError('photoTooLarge');
       if (!alive.current || ticket !== loadTicket.current) return;
       const scale = Math.min(1, 1400 / Math.max(next.width, next.height)), width = Math.max(1, Math.round(next.width * scale)), height = Math.max(1, Math.round(next.height * scale));
       const canvas = document.createElement('canvas'); canvas.width = width; canvas.height = height;
-      const ctx = canvas.getContext('2d', { willReadFrequently: true }); if (!ctx) throw new Error('사진을 처리할 수 없습니다.');
+      const ctx = canvas.getContext('2d', { willReadFrequently: true }); if (!ctx) throw photoError('photoUnprocessable');
       ctx.drawImage(next, 0, 0, width, height); const pixels = ctx.getImageData(0, 0, width, height).data;
       generation.current++; depthPending.current = null; depthSelect.current = false; if (depthClient.current?.busy) depthClient.current.dispose(); masks.current = {}; bitmap.current?.close(); bitmap.current = next; next = null;
       previewPixels.current = { pixels, width, height }; setRenderBackend(''); initializeEngine();
       const image = { pixels, width, height, offsetX: 0, offsetY: 0 }; paint(originalCanvas.current, image); paint(currentCanvas.current, image); paint(previousCanvas.current, image);
       putHistory(newHistory()); setCompare('current'); setMaskView('none');
       const p = { name: file.name, width: bitmap.current.width, height: bitmap.current.height }; photoRef.current = p; setPhoto(p);
-      setDepth({ status: 'idle', text: '깊이 모델은 사용할 때만 로드' });
+      setDepth({ status: 'idle', text: t.depthIdle });
       setRevision(v => v + 1);
-    } catch (cause) { if (alive.current && ticket === loadTicket.current) setError(cause instanceof Error && !/decode|source image|InvalidState/i.test(cause.message) ? cause.message : '사진을 열지 못했습니다. 지원 형식과 파일 상태를 확인해주세요.'); }
+    } catch (cause) { if (alive.current && ticket === loadTicket.current) setError(cause instanceof Error && !/decode|source image|InvalidState/i.test(cause.message) ? say(cause, 'photoOpenFailed') : t.photoOpenFailed); }
     finally { next?.close(); if (alive.current && ticket === loadTicket.current) setLoading(false); }
   }
   async function save() {
@@ -161,35 +165,35 @@ export function usePhotoEditor() {
     let timer: ReturnType<typeof setTimeout> | undefined;
     try {
       const output = document.createElement('canvas'); output.width = photo.width; output.height = photo.height;
-      const ctx = output.getContext('2d'); if (!ctx) throw new Error('저장할 메모리가 부족합니다.');
+      const ctx = output.getContext('2d'); if (!ctx) throw photoError('outOfMemory');
       ctx.drawImage(bitmap.current, 0, 0); const pixels = ctx.getImageData(0, 0, output.width, output.height).data;
       const result = await new Promise<WorkerResult>((resolve, reject) => {
         exportResult.current = { resolve, reject };
-        timer = setTimeout(() => { worker.current?.terminate(); worker.current = null; exportResult.current = null; reject(new Error('저장 시간이 초과되었습니다. 더 작은 사진으로 다시 시도해주세요.')); }, 120_000);
+        timer = setTimeout(() => { worker.current?.terminate(); worker.current = null; exportResult.current = null; reject(photoError('saveTimeout')); }, 120_000);
         worker.current!.postMessage({ kind: 'export', id: ++seq.current, pixels, width: output.width, height: output.height, settings: edit, mask: exportingDepth ? 'depth' : 'none' } satisfies WorkerRequest, [pixels.buffer]);
       });
-      if (!result.image) throw new Error('저장할 사진을 만들지 못했습니다.'); paint(output, result.image);
+      if (!result.image) throw photoError('saveBuildFailed'); paint(output, result.image);
       if (outputFormat === 'jpeg') { ctx.globalCompositeOperation = 'destination-over'; ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, output.width, output.height); }
-      const blob = await new Promise<Blob>((resolve, reject) => output.toBlob(value => value ? resolve(value) : reject(new Error('사진 인코딩 실패')), `image/${outputFormat}`, .95));
+      const blob = await new Promise<Blob>((resolve, reject) => output.toBlob(value => value ? resolve(value) : reject(photoError('encodeFailed')), `image/${outputFormat}`, .95));
       const url = URL.createObjectURL(blob), a = document.createElement('a'); a.href = url; a.download = `${photo.name.replace(/\.[^.]+$/, '')}-${exportingDepth ? 'depth' : 'edited'}.${outputFormat === 'jpeg' ? 'jpg' : 'png'}`; document.body.append(a); a.click(); a.remove();
-      setTimeout(() => URL.revokeObjectURL(url), 60_000); output.width = output.height = 0; setMessage('저장할 사진을 만들었습니다.');
-    } catch (cause) { setError(cause instanceof Error ? cause.message : '사진 저장 실패'); }
+      setTimeout(() => URL.revokeObjectURL(url), 60_000); output.width = output.height = 0; setMessage(t.saved);
+    } catch (cause) { setError(say(cause, 'saveFailed')); }
     finally { clearTimeout(timer); if (alive.current) setExporting(false); }
   }
   function persistPresets(next: SavedPreset[], success: string) {
     try { writePresets(localStorage, next); setSavedPresets(next); setError(''); setMessage(success); return true; }
-    catch { setError('프리셋을 저장하지 못했습니다. 브라우저 저장 공간과 권한을 확인해주세요.'); return false; }
+    catch { setError(t.presetWriteFailed); return false; }
   }
   function storePreset(name: string) {
-    try { const next = addPreset(savedPresets, name, historyRef.current.present); return persistPresets(next, '프리셋을 저장했습니다.') ? next.at(-1)!.id : null; }
-    catch (cause) { setError(cause instanceof Error ? cause.message : '프리셋 저장 실패'); return null; }
+    try { const next = addPreset(savedPresets, name, historyRef.current.present); return persistPresets(next, t.presetSaved) ? next.at(-1)!.id : null; }
+    catch (cause) { setError(say(cause, 'presetSaveFailed')); return null; }
   }
-  function overwritePreset(id: string) { persistPresets(replacePreset(savedPresets, id, historyRef.current.present), '현재 설정으로 프리셋을 덮어썼습니다.'); }
-  function deletePreset(id: string) { persistPresets(savedPresets.filter(preset => preset.id !== id), '프리셋을 삭제했습니다.'); }
+  function overwritePreset(id: string) { persistPresets(replacePreset(savedPresets, id, historyRef.current.present), t.presetOverwritten); }
+  function deletePreset(id: string) { persistPresets(savedPresets.filter(preset => preset.id !== id), t.presetDeleted); }
   function applyPreset(settings: EditState) {
     finishEffect(); setMaskView('none'); update({ ...settings });
     if (settings.focusMode === 'depth' && !masks.current.depth) {
-      setMessage(depthSupported ? '프리셋 적용 · 깊이 모델 준비 중' : '프리셋 적용 · 깊이 초점은 WebGPU가 필요합니다.');
+      setMessage(depthSupported ? t.presetAppliedDepthLoading : t.presetAppliedDepthUnsupported);
     }
   }
   function pick(x: number, y: number) {

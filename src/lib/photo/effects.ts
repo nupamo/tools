@@ -1,4 +1,5 @@
 import { effectiveState, type EditState } from './state';
+import { photoError } from './messages';
 export interface Plane { data: Float32Array; width: number; height: number; }
 export interface Masks { depth?: Plane; }
 export interface Rendered { pixels: Uint8ClampedArray; width: number; height: number; offsetX: number; offsetY: number; }
@@ -52,7 +53,7 @@ function weightedBlur(source: Uint8ClampedArray, w: number, h: number, radius: n
 }
 
 export function renderPhoto(source: Uint8ClampedArray, w: number, h: number, raw: EditState, masks: Masks = {}, showMask: 'none' | 'depth' = 'none'): Rendered {
-  if (!Number.isInteger(w) || !Number.isInteger(h) || w < 1 || h < 1 || source.length !== w * h * 4) throw new Error('사진 크기가 올바르지 않습니다.');
+  if (!Number.isInteger(w) || !Number.isInteger(h) || w < 1 || h < 1 || source.length !== w * h * 4) throw photoError('photoSize');
   if (showMask === 'depth') return renderDepthMap(w, h, masks.depth);
   const s = effectiveState(raw);
   const min = Math.min(w, h), pixels = new Uint8ClampedArray(source.length);
@@ -107,7 +108,7 @@ export function renderPhoto(source: Uint8ClampedArray, w: number, h: number, raw
 
 /** Shared by preview and export: plain opaque grayscale, independent of photo effects. */
 export function renderDepthMap(w: number, h: number, depth?: Plane): Rendered {
-  if (!depth) throw new Error('깊이 분석을 먼저 완료해주세요.');
+  if (!depth) throw photoError('depthFirst');
   const pixels = new Uint8ClampedArray(w * h * 4);
   for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
     const p = (y * w + x) * 4, value = sample(depth, (x + .5) / w, (y + .5) / h);

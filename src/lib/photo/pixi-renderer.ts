@@ -1,6 +1,7 @@
 /// <reference lib="webworker" />
 import 'pixi.js/webworker';
 import { BlurFilter, BufferImageSource, DOMAdapter, Filter, GlProgram, Rectangle, RenderTexture, Sprite, Texture, TexturePool, Ticker, WebGLRenderer, WebWorkerAdapter } from 'pixi.js';
+import { photoError } from './messages';
 import { AdjustmentFilter } from 'pixi-filters/adjustment';
 import { AdvancedBloomFilter } from 'pixi-filters/advanced-bloom';
 import { addFrame, renderDepthMap, clamp, type Masks, type Plane, type Rendered } from './effects';
@@ -36,7 +37,7 @@ export class PixiPhotoRenderer {
     try {
       await engine.renderer.init({ canvas: new OffscreenCanvas(1, 1), width: 1, height: 1, resolution: 1, backgroundAlpha: 0, antialias: false, powerPreference: 'high-performance', preferWebGLVersion: 2, skipExtensionImports: true });
       const gl = engine.renderer.gl;
-      if (gl.isContextLost() || engine.renderer.context.webGLVersion !== 2) throw new Error('WebGL2 초기화에 실패했습니다.');
+      if (gl.isContextLost() || engine.renderer.context.webGLVersion !== 2) throw photoError('webgl2Failed');
       engine.textureLimit = Math.min(4096, gl.getParameter(gl.MAX_TEXTURE_SIZE));
       return engine;
     } catch (error) { engine.destroy(); throw error; }
@@ -45,8 +46,8 @@ export class PixiPhotoRenderer {
   destroy() { try { this.renderer.destroy(); } catch {} }
 
   render(source: Uint8ClampedArray, w: number, h: number, raw: EditState, masks: Masks = {}, view: MaskView = 'none', coreLimit?: number): Rendered {
-    if (w < 1 || h < 1 || source.length !== w * h * 4) throw new Error('사진 크기가 올바르지 않습니다.');
-    if (this.renderer.gl.isContextLost()) throw new Error('GPU 연결이 끊겼습니다. 사진을 다시 선택해주세요.');
+    if (w < 1 || h < 1 || source.length !== w * h * 4) throw photoError('photoSize');
+    if (this.renderer.gl.isContextLost()) throw photoError('gpuLost');
     if (view === 'depth') return renderDepthMap(w, h, masks.depth);
     const s = effectiveState(raw);
     const active = s.exposure || s.contrast || s.highlights || s.shadows || s.warmth || s.tint || s.saturation || s.vibrance ||

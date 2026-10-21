@@ -1,0 +1,19 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import PhotoEditor from '../../components/PhotoEditor';
+import ProcessingInfo from '../../components/ProcessingInfo';
+import { tools } from '../../data/tools';
+import { getMessages, localeStaticPaths, type Locale } from '../../i18n';
+export const getStaticPaths = localeStaticPaths;
+const { locale } = Astro.props as { locale: Locale };
+const tool = tools.find(t => t.slug === 'photo')!;
+const name = tool.name[locale];
+---
+<Layout title={name} description={tool.description[locale]} locale={locale} path="photo/" workspace>
+  <div class="tool-heading">
+    <h1>{name}</h1>
+    <ProcessingInfo processing={tool.processing} locale={locale} />
+  </div>
+  <PhotoEditor client:load locale={locale} label={name} />
+  <noscript><p class="noscript-message">{getMessages(locale).photo.noscript}</p></noscript>
+</Layout>

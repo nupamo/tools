@@ -1,0 +1,51 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import { tools, projects, type HomeIconName } from '../../data/tools';
+import { getMessages, localePath, localeStaticPaths, type Locale } from '../../i18n';
+import { Aperture, ArrowUpRight, Bot } from 'lucide-react';
+export const getStaticPaths = localeStaticPaths;
+const { locale } = Astro.props as { locale: Locale };
+const t = getMessages(locale).site;
+const icons = { aperture: Aperture, bot: Bot } satisfies Record<HomeIconName, unknown>;
+---
+<Layout title="tools" description={t.tagline} locale={locale} home>
+  <nav slot="header-nav" class="header-nav" aria-label={t.jump}>
+    <a class="header-link" href="#tools-list">{t.tools}</a>
+    <a class="header-link" href="#projects-list">{t.projects}</a>
+  </nav>
+  <div class="directory">
+    <h1>tools</h1>
+    <p class="directory-description">{t.tagline}</p>
+    <nav id="tools-list" class="tool-grid" aria-label={t.tools}>
+      {tools.map(tool => {
+        const Icon = icons[tool.icon];
+        return (
+          <a class="tool-tile" href={localePath(locale, `${tool.slug}/`)}>
+            <Icon className="tool-tile-icon" size={36} aria-hidden="true" />
+            <div class="tool-copy"><strong>{tool.name[locale]}</strong><span>{tool.description[locale]}</span></div>
+          </a>
+        );
+      })}
+    </nav>
+    {projects.length > 0 && (
+      <section id="projects-list" class="projects" aria-labelledby="projects-heading">
+        <div class="section-divider"><h2 id="projects-heading">{t.otherProjects}</h2></div>
+        <nav class="tool-grid" aria-labelledby="projects-heading">
+          {projects.map(project => {
+            const Icon = icons[project.icon];
+            return (
+              <a class="tool-tile" href={project.href} target="_blank" rel="noopener">
+                <Icon className="tool-tile-icon" size={36} aria-hidden="true" />
+                <div class="tool-copy">
+                  <strong>{project.name}<ArrowUpRight className="external-mark" size={14} aria-hidden="true" /><span class="visually-hidden">{t.newTab}</span></strong>
+                  <span>{project.description[locale]}</span>
+                  <small>{project.domain}</small>
+                </div>
+              </a>
+            );
+          })}
+        </nav>
+      </section>
+    )}
+  </div>
+</Layout>

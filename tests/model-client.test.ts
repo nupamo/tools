@@ -14,6 +14,6 @@ test('model progress cannot enable features; only the matching completed request
 });
 test('cancelling a previous photo rejects pending work and retry creates a fresh worker',async()=>{
  const workers:FakeWorker[]=[];const client=new ModelClient(()=>{const worker=new FakeWorker();workers.push(worker);return worker as unknown as Worker;});
- const pending=client.run({},[],()=>{});const rejected=assert.rejects(pending,/취소/);client.dispose();await rejected;assert.equal(workers[0].terminated,true);
+ const pending=client.run({},[],()=>{});const rejected=assert.rejects(pending,/modelCancelled/);client.dispose();await rejected;assert.equal(workers[0].terminated,true);
  const retry=client.run({},[],()=>{});workers[1].reply({kind:'result',id:workers[1].messages[0].id,backend:'GPU'});assert.equal((await retry).backend,'GPU');client.dispose();
 });

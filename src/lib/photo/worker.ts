@@ -2,6 +2,7 @@
 import { renderPhoto, type Masks, type Rendered } from './effects';
 import type { EditState } from './state';
 import { PixiPhotoRenderer } from './pixi-renderer';
+import { photoError } from './messages';
 export type MaskView = 'none' | 'depth';
 export type WorkerRequest =
   | { kind: 'init'; pixels: Uint8ClampedArray; width: number; height: number }
@@ -23,7 +24,7 @@ async function handle(data: WorkerRequest) {
   if (data.kind === 'masks') { masks = { ...masks, ...data.masks }; previousKey = ''; return; }
   try {
     const source = data.kind === 'export' ? data : preview;
-    if (!source) throw new Error('사진을 먼저선택해주세요.');
+    if (!source) throw photoError('photoNotSelected');
     if (!initialized) {
       initialized = true;
       try { gpu = await PixiPhotoRenderer.create(); } catch { gpu = null; }
@@ -38,5 +39,5 @@ async function handle(data: WorkerRequest) {
     }
     const transfer: Transferable[] = [image.pixels.buffer]; if (previous) transfer.push(previous.pixels.buffer);
     self.postMessage({ kind: data.kind, id: data.id, image, previous, backend: gpu?.backend ?? 'CPU' } satisfies WorkerResult, { transfer });
-  } catch (cause) { self.postMessage({ kind: data.kind, id: data.id, error: cause instanceof Error ? cause.message : '사진 처리에 실패했습니다.' } satisfies WorkerResult); }
+  } catch (cause) { self.postMessage({ kind: data.kind, id: data.id, error: cause instanceof Error ? cause.message : 'photoProcessFailed' } satisfies WorkerResult); }
 };
