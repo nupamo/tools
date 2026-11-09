@@ -1,4 +1,5 @@
 import type { PhotoMessage } from '../lib/photo/messages';
+import type { MidiMessage } from '../lib/midi/messages';
 
 const ko = {
   site: {
@@ -8,6 +9,29 @@ const ko = {
   processing: {
     label: '처리 방식', server: (used: boolean) => `서버 사용 ${used ? '있음' : '없음'}`,
     onDevice: (model: string, optional?: boolean) => `온디바이스 · ${model}${optional ? ' (선택)' : ''}`, noModel: '온디바이스 모델 없음',
+  },
+  midi: {
+    noscript: 'MIDI2MML을 사용하려면 JavaScript를 켜주세요. 파일은 서버로 전송되지 않습니다.',
+    file: 'MIDI 파일', start: 'MIDI 파일을 골라 시작하세요.', choose: 'MIDI 선택', another: '다른 MIDI',
+    drop: 'MIDI 파일을 놓거나 선택하세요', limits: '.mid · .midi · 최대 5MB', opening: 'MIDI 여는 중…',
+    summary: (notes: string, time: string) => `음표 ${notes}개 · ${time}`,
+    play: '재생', pause: '일시정지', stop: '정지', zoomIn: '확대', zoomOut: '축소',
+    roll: '피아노롤. 누르면 그 위치부터 재생합니다.', rollHint: '피아노롤을 누르면 그 위치부터 재생합니다.',
+    settings: '변환 설정', format: 'MML 형식', formats: { generic: '범용', mabinogi: '마비노기' },
+    grid: '음표 단위', grids: { '8': '8분음표', '16': '16분음표', '32': '32분음표', '64': '64분음표', '12': '8분 셋잇단', '24': '16분 셋잇단' },
+    voices: '트랙 수', voiceCount: (n: number) => `${n}트랙`, scores: '악보 수', scoreCount: (n: number) => `${n}개 · 트랙 ${n * 3}개`,
+    volume: '세기를 볼륨(v)으로 쓰기', drums: '드럼 채널 포함', tracks: 'MIDI 트랙',
+    trackName: (i: number, name: string) => name || `트랙 ${i + 1}`, trackNotes: (n: string) => `음표 ${n}개`, drumTag: '드럼',
+    result: (kept: string, dropped: string) => `음표 ${kept}개 변환${dropped === '0' ? '' : ` · ${dropped}개 제외`}`,
+    droppedHint: '동시에 울리는 음이 트랙 수보다 많으면 제외됩니다. 트랙 수를 늘려보세요.',
+    output: '결과', copy: '복사', voice: (i: number) => `트랙 ${i + 1}`, score: (i: number) => `악보 ${i + 1}`,
+    parts: ['멜로디', '화음 1', '화음 2'], chars: (n: string) => `${n}자`, empty: '선택한 트랙에 음표가 없습니다.',
+    status: {
+      notMidi: 'MIDI 파일이 아닙니다.', smpte: 'SMPTE 시간 형식의 MIDI는 지원하지 않습니다.', truncated: 'MIDI 파일이 손상되었습니다.',
+      noNotes: '음표가 없는 MIDI 파일입니다.', tooManyNotes: '음표가 너무 많습니다. 10만 개까지 지원합니다.',
+      fileTooLarge: '5MB 이하의 MIDI 파일을 선택해주세요.', openFailed: 'MIDI 파일을 열지 못했습니다.',
+      audioFailed: '소리를 재생하지 못했습니다.', copied: '복사했습니다.', copyFailed: '복사하지 못했습니다. 직접 선택해 복사해주세요.',
+    } satisfies Record<MidiMessage, string>,
   },
   photo: {
     noscript: '사진 보정을 사용하려면 JavaScript를 켜주세요. 사진은 서버로 전송되지 않습니다.',

@@ -2,11 +2,11 @@
 import Layout from '../../layouts/Layout.astro';
 import { tools, projects, type HomeIconName } from '../../data/tools';
 import { getMessages, localePath, localeStaticPaths, type Locale } from '../../i18n';
-import { Aperture, ArrowUpRight, Bot } from 'lucide-react';
+import { Aperture, ArrowUpRight, Bot, Music } from 'lucide-react';
 export const getStaticPaths = localeStaticPaths;
 const { locale } = Astro.props as { locale: Locale };
 const t = getMessages(locale).site;
-const icons = { aperture: Aperture, bot: Bot } satisfies Record<HomeIconName, unknown>;
+const icons = { aperture: Aperture, bot: Bot, music: Music } satisfies Record<HomeIconName, unknown>;
 ---
 <Layout title="tools" description={t.tagline} locale={locale} home>
   <nav slot="header-nav" class="header-nav" aria-label={t.jump}>
