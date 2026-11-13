@@ -1,6 +1,6 @@
 import type { Localized } from '../i18n';
 
-export type HomeIconName = 'aperture' | 'bot';
+export type HomeIconName = 'aperture' | 'bot' | 'music';
 
 export interface Tool {
   slug: string;
@@ -27,6 +27,18 @@ export const tools: Tool[] = [
       server: false, models: [{ name: 'Depth Anything V2 Small', optional: true }],
       note: { ko: '사진 전송 없음 · 모델만 다운로드', en: 'Photos stay on device · only the model downloads', ja: '写真の送信なし · モデルのみダウンロード' },
     },
+  },
+  {
+    slug: 'midi2mml',
+    name: { ko: 'MIDI2MML', en: 'MIDI2MML', ja: 'MIDI2MML' },
+    description: {
+      ko: 'MIDI를 범용·마비노기 MML로 바꾸고, 피아노롤로 보며 들어봅니다.',
+      en: 'Convert MIDI to generic or Mabinogi MML, with a piano roll and playback.',
+      ja: 'MIDI を汎用・マビノギ用 MML に変換し、ピアノロールで確認・再生します。',
+    },
+    category: { ko: '음악', en: 'Music', ja: '音楽' },
+    icon: 'music',
+    processing: { server: false, models: [], note: { ko: '파일 전송 없음', en: 'Files stay on device', ja: 'ファイルの送信なし' } },
   },
 ];
 

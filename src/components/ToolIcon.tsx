@@ -4,7 +4,7 @@ import {
   Aperture, Blend, Circle, CircleOff, CloudOff, Contrast, Cpu, Download,
   Droplets, Eraser, Expand, Eye, Focus, Frame, History, Image, ImagePlus,
   Layers, Maximize, Moon, Paintbrush, Palette, RotateCcw, Save, Scan, ScanFace,
-  ShieldCheck, SlidersHorizontal, Sparkles, Square, SquareRoundCorner,
+  ShieldCheck, SlidersHorizontal, FileMusic, Play, Pause, Copy, ZoomIn, ZoomOut, Sparkles, Square, SquareRoundCorner,
   Sun, SunDim, Sunrise, Thermometer, Trash2, Undo2, Redo2, Upload, UserRound, WandSparkles,
 } from 'lucide-react';
 
@@ -19,6 +19,7 @@ const icons = {
   square: Square, rounded: SquareRoundCorner, sun: Sun, sunDim: SunDim,
   sunrise: Sunrise, thermometer: Thermometer, undo: Undo2, redo: Redo2,
   trash: Trash2, upload: Upload, person: UserRound, wand: WandSparkles,
+  fileMusic: FileMusic, play: Play, pause: Pause, copy: Copy, zoomIn: ZoomIn, zoomOut: ZoomOut,
 };
 
 export type ToolIconName = keyof typeof icons;
