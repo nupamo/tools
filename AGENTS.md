@@ -6,7 +6,7 @@
 - List only working tools. No marketing sections, mock statistics or coming-soon tools.
 - Tool pages show server use and exact on-device model directly under the title. Say “none” when no model is used.
 - Desktop workspaces fit the viewport; mobile may scroll. Keep actions reachable at short viewport heights.
-- No manual, account wall, analytics or photo upload service.
+- No manual, account wall or photo upload service. The only analytics is the shared Google Analytics tag (`G-SYEWNRRSVM`) in `Layout.astro`; never send photo data, file names or edit settings to it.
 - Every page exists in Korean (site root), English (`/en/`) and Japanese (`/ja/`). The header links to the same page in each language.
 - Colours follow the OS light/dark setting. Use theme tokens, not fixed colours, so both modes work.
 
