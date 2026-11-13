@@ -2,7 +2,7 @@ import type { Messages } from './ko';
 
 const ja: Messages = {
   site: {
-    skip: '本文へ移動', home: 'tools ホーム', toolList: 'ツール一覧', tagline: '自分で使うために作った小さなツール。',
+    darkMode: 'ダークモード', skip: '本文へ移動', home: 'tools ホーム', tagline: '自分で使うために作った小さなツール。',
     jump: 'ジャンプ', tools: 'ツール', projects: 'プロジェクト', otherProjects: 'ほかのプロジェクト', newTab: '（新しいタブで開きます）', language: '言語',
   },
   processing: {
