@@ -55,8 +55,10 @@ export default function PianoRoll({ conversion, meter, zoom, position, following
     const redraw = () => draw(), theme = matchMedia('(prefers-color-scheme: dark)');
     const retheme = () => { palette.current = []; draw(); };
     const resize = new ResizeObserver(redraw); resize.observe(box);
+    // The header toggle sets html[data-color-mode]; without it the OS setting decides.
+    const toggle = new MutationObserver(retheme); toggle.observe(document.documentElement, { attributeFilter: ['data-color-mode'] });
     box.addEventListener('scroll', redraw, { passive: true }); theme.addEventListener('change', retheme);
-    return () => { resize.disconnect(); box.removeEventListener('scroll', redraw); theme.removeEventListener('change', retheme); };
+    return () => { resize.disconnect(); toggle.disconnect(); box.removeEventListener('scroll', redraw); theme.removeEventListener('change', retheme); };
   });
   useEffect(() => {
     const box = scroller.current; if (!box) return;
