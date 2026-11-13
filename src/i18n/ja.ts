@@ -3,7 +3,7 @@ import type { Messages } from './ko';
 const ja: Messages = {
   site: {
     darkMode: 'ダークモード', skip: '本文へ移動', home: 'tools ホーム', tagline: '自分で使うために作った小さなツール。',
-    jump: 'ジャンプ', tools: 'ツール', projects: 'プロジェクト', otherProjects: 'ほかのプロジェクト', newTab: '（新しいタブで開きます）', language: '言語',
+    tools: 'ツール', otherProjects: 'ほかのプロジェクト', newTab: '（新しいタブで開きます）', language: '言語',
   },
   processing: {
     label: '処理方法', server: (used: boolean) => `サーバー利用 ${used ? 'あり' : 'なし'}`,
