@@ -1,6 +1,7 @@
 ---
 import '../styles/global.css';
 import { LOCALES, LOCALE_NAMES, getMessages, localePath, type Locale } from '../i18n';
+import { Languages, Moon, Sun } from 'lucide-react';
 interface Props { title: string; description: string; locale: Locale; path?: string; workspace?: boolean; home?: boolean; }
 const { title, description, locale, path = '', workspace = false, home = false } = Astro.props;
 const t = getMessages(locale).site;
@@ -24,6 +25,11 @@ const site = Astro.site ?? Astro.url;
     <link rel="icon" type="image/svg+xml" href={`${import.meta.env.BASE_URL}favicon.svg`} />
     {LOCALES.map(l => <link rel="alternate" hreflang={l} href={new URL(localePath(l, path), site).href} />)}
     <link rel="alternate" hreflang="x-default" href={new URL(localePath('ko', path), site).href} />
+    <link rel="canonical" href={new URL(localePath(locale, path), site).href} />
+    <script is:inline>
+      // Apply a saved theme before paint. Without one, the OS setting decides.
+      try { const t = localStorage.getItem('tools-theme'); if (t === 'light' || t === 'dark') document.documentElement.dataset.colorMode = t; } catch {}
+    </script>
     <title>{title === 'tools' ? title : `${title} · tools`}</title>
   </head>
   <body class:list={{ 'workspace-page': workspace, 'home-page': home }}>
@@ -31,12 +37,42 @@ const site = Astro.site ?? Astro.url;
     <header class="site-header">
       <a class="wordmark" href={localePath(locale)} aria-label={t.home}>tools<span aria-hidden="true">.</span></a>
       <div class="header-actions">
-        <slot name="header-nav"><a class="header-link" href={localePath(locale)}>{t.toolList}</a></slot>
-        <nav class="language-switch" aria-label={t.language}>
-          {LOCALES.map(l => <a href={localePath(l, path)} hreflang={l} lang={l} title={LOCALE_NAMES[l].name} aria-label={LOCALE_NAMES[l].name} aria-current={l === locale ? 'page' : undefined}>{LOCALE_NAMES[l].short}</a>)}
-        </nav>
+        <slot name="header-nav" />
+        <label class="header-select language-select">
+          <Languages size={14} aria-hidden="true" />
+          <span class="visually-hidden">{t.language}</span>
+          <select data-nav-select>
+            {LOCALES.map(l => <option value={localePath(l, path)} lang={l} selected={l === locale}>{LOCALE_NAMES[l].name}</option>)}
+          </select>
+        </label>
+        <noscript>
+          <nav class="language-switch" aria-label={t.language}>
+            {LOCALES.map(l => <a href={localePath(l, path)} hreflang={l} lang={l} title={LOCALE_NAMES[l].name} aria-label={LOCALE_NAMES[l].name} aria-current={l === locale ? 'page' : undefined}>{LOCALE_NAMES[l].short}</a>)}
+          </nav>
+        </noscript>
+        <button type="button" class="theme-toggle" data-theme-toggle hidden aria-label={t.darkMode} title={t.darkMode} aria-pressed="false">
+          <Moon className="icon-moon" size={16} aria-hidden="true" />
+          <Sun className="icon-sun" size={16} aria-hidden="true" />
+        </button>
       </div>
     </header>
     <main id="main"><slot /></main>
+    <script is:inline>
+      document.querySelectorAll('[data-nav-select]').forEach(s => s.addEventListener('change', e => { location.href = e.target.value; }));
+      const button = document.querySelector('[data-theme-toggle]');
+      const root = document.documentElement;
+      const media = matchMedia('(prefers-color-scheme: dark)');
+      const isDark = () => root.dataset.colorMode ? root.dataset.colorMode === 'dark' : media.matches;
+      const sync = () => button.setAttribute('aria-pressed', String(isDark()));
+      button.hidden = false;
+      sync();
+      media.addEventListener('change', sync);
+      button.addEventListener('click', () => {
+        const next = isDark() ? 'light' : 'dark';
+        root.dataset.colorMode = next;
+        try { localStorage.setItem('tools-theme', next); } catch {}
+        sync();
+      });
+    </script>
   </body>
 </html>

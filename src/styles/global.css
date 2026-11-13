@@ -19,14 +19,25 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 .header-link { color: var(--muted); font-size: 13px; }
 .header-link:hover { color: var(--ink); text-decoration: underline; }
 .home-page .site-header { border-bottom: 0; }
-.header-nav { display: flex; gap: 20px; }
-.header-actions { display: flex; align-items: center; gap: 20px; }
+.header-actions { display: flex; align-items: center; gap: 8px; }
+.header-actions > .header-link { margin-right: 12px; }
+.header-select { position: relative; display: inline-flex; align-items: center; color: var(--muted); }
+.header-select svg { position: absolute; left: 9px; pointer-events: none; }
+.header-select select { appearance: none; -webkit-appearance: none; height: 30px; padding: 0 28px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%23888' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") no-repeat right 10px center; color: var(--ink); font: inherit; font-size: 12px; cursor: pointer; }
+.header-select select:hover, .theme-toggle:hover { border-color: var(--color-border-emphasized); }
+.header-select select:focus-visible, .theme-toggle:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+/* Header toggle. Uses its own attribute because Astryx <Theme mode="system"> in the islands
+   rewrites html[data-theme] and gives its wrapper `color-scheme: light dark`. */
+html[data-color-mode=light], html[data-color-mode=light] [data-astryx-theme] { color-scheme: light; }
+html[data-color-mode=dark], html[data-color-mode=dark] [data-astryx-theme] { color-scheme: dark; }
+.theme-toggle { display: inline-grid; place-items: center; width: 30px; height: 30px; padding: 0; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); color: var(--ink); cursor: pointer; }
+.theme-toggle[hidden] { display: none; }
+.theme-toggle .icon-sun, .theme-toggle[aria-pressed=true] .icon-moon { display: none; }
+.theme-toggle[aria-pressed=true] .icon-sun { display: block; }
 .language-switch { display: flex; gap: 2px; font-size: 12px; }
 .language-switch a { padding: 2px 6px; border-radius: 4px; color: var(--muted); }
 .language-switch a:hover { color: var(--ink); background: var(--color-background-muted); }
 .language-switch a[aria-current=page] { color: var(--ink); font-weight: 650; background: var(--surface); }
-.header-nav .header-link { font-size: 14px; }
-.header-nav .header-link:hover { text-decoration: none; }
 .directory { width: min(880px, calc(100% - 48px)); margin: 56px auto 80px; }
 .directory h1 { font-size: 34px; letter-spacing: -1px; font-weight: 700; line-height: 1.2; }
 .directory-description { color: var(--muted); margin: 8px 0 32px; font-size: 16px; font-style: italic; }
@@ -37,9 +48,8 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 .tool-copy { display: grid; gap: 2px; min-width: 0; }
 .tool-copy strong { display: flex; align-items: center; gap: 6px; font-size: 16px; font-weight: 600; }
 .tool-copy span { color: var(--muted); font-size: 13px; line-height: 1.45; text-wrap: pretty; }
-.tool-copy small { color: var(--muted); font-size: 12px; opacity: .85; }
 .external-mark { opacity: .6; }
-.projects { margin-top: 40px; scroll-margin-top: 16px; }
+.projects { margin-top: 40px; }
 .section-divider { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
 .section-divider::after { content: ''; flex: 1; height: 1px; background: var(--line); }
 .section-divider h2 { font-size: 13px; font-weight: 600; color: var(--muted); white-space: nowrap; }
@@ -144,7 +154,7 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 @media (max-width:760px) {
  .site-header { height: 52px; padding: 0 18px; }
  .directory { margin: 40px auto; width: calc(100% - 32px); }
- .header-actions, .header-nav { gap: 12px; }
+ .header-actions > .header-link { margin-right: 4px; }
  .workspace-page { height: auto; min-height: 100dvh; overflow: visible; }
  .workspace-page main { padding: 14px 10px; }
  .processing-meta { font-size: 10px; }
