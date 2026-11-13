@@ -9,14 +9,10 @@ const t = getMessages(locale).site;
 const icons = { aperture: Aperture, bot: Bot, music: Music } satisfies Record<HomeIconName, unknown>;
 ---
 <Layout title="tools" description={t.tagline} locale={locale} home>
-  <nav slot="header-nav" class="header-nav" aria-label={t.jump}>
-    <a class="header-link" href="#tools-list">{t.tools}</a>
-    <a class="header-link" href="#projects-list">{t.projects}</a>
-  </nav>
   <div class="directory">
     <h1>tools</h1>
     <p class="directory-description">{t.tagline}</p>
-    <nav id="tools-list" class="tool-grid" aria-label={t.tools}>
+    <nav class="tool-grid" aria-label={t.tools}>
       {tools.map(tool => {
         const Icon = icons[tool.icon];
         return (
@@ -28,7 +24,7 @@ const icons = { aperture: Aperture, bot: Bot, music: Music } satisfies Record<Ho
       })}
     </nav>
     {projects.length > 0 && (
-      <section id="projects-list" class="projects" aria-labelledby="projects-heading">
+      <section class="projects" aria-labelledby="projects-heading">
         <div class="section-divider"><h2 id="projects-heading">{t.otherProjects}</h2></div>
         <nav class="tool-grid" aria-labelledby="projects-heading">
           {projects.map(project => {
@@ -39,7 +35,6 @@ const icons = { aperture: Aperture, bot: Bot, music: Music } satisfies Record<Ho
                 <div class="tool-copy">
                   <strong>{project.name}<ArrowUpRight className="external-mark" size={14} aria-hidden="true" /><span class="visually-hidden">{t.newTab}</span></strong>
                   <span>{project.description[locale]}</span>
-                  <small>{project.domain}</small>
                 </div>
               </a>
             );

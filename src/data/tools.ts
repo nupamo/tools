@@ -46,11 +46,10 @@ export interface Project {
   href: string;
   name: string;
   description: Localized;
-  domain: string;
   icon: HomeIconName;
 }
 
 // Other projects linked below the tool list. They are not tools and open on their own sites.
 export const projects: Project[] = [
-  { href: 'https://bot.nupa.moe/', name: 'Pamo_bot', description: { ko: '디스코드 봇', en: 'Discord bot', ja: 'Discord ボット' }, domain: 'bot.nupa.moe', icon: 'bot' },
+  { href: 'https://bot.nupa.moe/', name: 'Pamo_bot', description: { ko: '디스코드 봇', en: 'Discord bot', ja: 'Discord ボット' }, icon: 'bot' },
 ];

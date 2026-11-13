@@ -3,8 +3,8 @@ import type { MidiMessage } from '../lib/midi/messages';
 
 const ko = {
   site: {
-    skip: '본문으로 이동', home: 'tools 홈', toolList: '도구 목록', tagline: '직접 쓰려고 만든 작은 도구들.',
-    jump: '바로가기', tools: '도구', projects: '프로젝트', otherProjects: '다른 프로젝트', newTab: '(새 창에서 열림)', language: '언어',
+    darkMode: '다크 모드', skip: '본문으로 이동', home: 'tools 홈', tagline: '직접 쓰려고 만든 작은 도구들.',
+    tools: '도구', otherProjects: '다른 프로젝트', newTab: '(새 창에서 열림)', language: '언어',
   },
   processing: {
     label: '처리 방식', server: (used: boolean) => `서버 사용 ${used ? '있음' : '없음'}`,

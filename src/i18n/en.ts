@@ -2,8 +2,8 @@ import type { Messages } from './ko';
 
 const en: Messages = {
   site: {
-    skip: 'Skip to content', home: 'tools home', toolList: 'All tools', tagline: 'Small tools I made for my own use.',
-    jump: 'Jump to', tools: 'Tools', projects: 'Projects', otherProjects: 'Other projects', newTab: '(opens in a new tab)', language: 'Language',
+    darkMode: 'Dark mode', skip: 'Skip to content', home: 'tools home', tagline: 'Small tools I made for my own use.',
+    tools: 'Tools', otherProjects: 'Other projects', newTab: '(opens in a new tab)', language: 'Language',
   },
   processing: {
     label: 'Processing', server: (used: boolean) => `Server: ${used ? 'used' : 'none'}`,
