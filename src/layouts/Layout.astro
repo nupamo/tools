@@ -10,6 +10,14 @@ const site = Astro.site ?? Astro.url;
 <html lang={locale} data-astryx-theme="neutral">
   <head>
     <meta charset="UTF-8" />
+    <!-- Google tag (gtag.js), shared with nupa.moe, guide and vrcti -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-SYEWNRRSVM"></script>
+    <script is:inline>
+      window.dataLayer = window.dataLayer || [];
+      function gtag() { dataLayer.push(arguments); }
+      gtag('js', new Date());
+      gtag('config', 'G-SYEWNRRSVM');
+    </script>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="description" content={description} />
     <meta name="color-scheme" content="light dark" />

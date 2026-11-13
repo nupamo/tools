@@ -18,6 +18,8 @@ PowerShell: `$env:ONNXRUNTIME_NODE_INSTALL="skip"` 설정 후 `npm ci`.
 
 Astro 정적 출력은 `dist/`입니다. Astryx Neutral의 실제 Button/Slider를 사용하는 React island에 편집 UI를 한정합니다. 메인 목록은 프레임워크 JS를 보내지 않습니다. 새 도구는 `src/data/tools.ts`와 `src/pages/<slug>.astro`에 등록합니다.
 
+모든 페이지에 Google Analytics(`G-SYEWNRRSVM`, guide·vrcti와 같은 속성) 태그가 있습니다. 페이지 방문만 집계하며 사진·파일 이름·편집 설정은 보내지 않습니다.
+
 `main` push 시 GitHub Actions가 검사·테스트·빌드 후 GitHub Pages에 배포합니다. `SITE_URL=https://tools.nupa.moe`, `BASE_PATH=/`, `public/CNAME=tools.nupa.moe`입니다. 다른 호스팅의 하위 경로는 `BASE_PATH`로 지정할 수 있습니다.
 
 ## 사진 보정
