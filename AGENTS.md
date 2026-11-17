@@ -17,7 +17,8 @@
 - Do not introduce site-wide SPA routing or a server adapter.
 - Register tools in `src/data/tools.ts` with text for every locale.
 - Pages live in `src/pages/[...lang]/` and use `localeStaticPaths()`. UI text lives in `src/i18n/{ko,en,ja}.ts`; islands read it with `useMessages()`.
-- Photo code in `src/lib/photo/` and MIDI code in `src/lib/midi/` report errors and status as codes from their `messages.ts`, never as UI text.
+- Photo code in `src/lib/photo/`, MIDI code in `src/lib/midi/` and BOOTH code in `src/lib/booth/` report errors and status as codes from their `messages.ts`, never as UI text.
+- Charts use Apache ECharts (`echarts/core` with only the needed parts) and the `--chart-1…8` series colours in `global.css`. The BOOTH CSV has buyer names and addresses: read only the columns the chart needs and keep nothing else.
 - Keep image processing independent of React in `src/lib/photo/` and run it in a Web Worker.
 - Preview can be scaled, but export must reprocess original pixels at the original resolution.
 - Never change the original file or send image pixels off the device.

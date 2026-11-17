@@ -1,6 +1,6 @@
 import type { Localized } from '../i18n';
 
-export type HomeIconName = 'aperture' | 'bot' | 'music';
+export type HomeIconName = 'aperture' | 'bot' | 'music' | 'chart';
 
 export interface Tool {
   slug: string;
@@ -39,6 +39,18 @@ export const tools: Tool[] = [
     category: { ko: '음악', en: 'Music', ja: '音楽' },
     icon: 'music',
     processing: { server: false, models: [], note: { ko: '파일 전송 없음', en: 'Files stay on device', ja: 'ファイルの送信なし' } },
+  },
+  {
+    slug: 'booth-sales',
+    name: { ko: 'BOOTH 매출 차트', en: 'BOOTH sales chart', ja: 'BOOTH 売上チャート' },
+    description: {
+      ko: 'BOOTH 주문 CSV를 제품별 매출 차트로 그리고, 업데이트·할인 같은 이벤트를 함께 표시합니다.',
+      en: 'Chart a BOOTH order CSV by product, with events such as updates and sales marked on it.',
+      ja: 'BOOTH の注文 CSV を商品別の売上チャートにし、アップデートやセールなどのイベントを重ねて表示します。',
+    },
+    category: { ko: '통계', en: 'Stats', ja: '統計' },
+    icon: 'chart',
+    processing: { server: false, models: [], note: { ko: 'CSV 전송 없음', en: 'CSV stays on device', ja: 'CSV の送信なし' } },
   },
 ];
 

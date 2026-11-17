@@ -32,6 +32,61 @@ const en: Messages = {
       audioFailed: 'Could not play sound.', copied: 'Copied.', copyFailed: 'Could not copy. Select the text and copy it yourself.',
     },
   },
+  booth: {
+    noscript: 'Turn on JavaScript to use the BOOTH sales chart. Your CSV is not sent to a server.',
+    file: 'BOOTH order CSV', start: 'Choose an order CSV exported from BOOTH to begin.', choose: 'Choose CSV', another: 'Another CSV',
+    drop: 'Drop or choose an order CSV', limits: 'BOOTH order management → CSV download · up to 20MB', opening: 'Opening CSV…',
+    summary: (orders, from, to) => `${orders} orders · ${from} – ${to}`,
+    savePng: 'Save PNG', view: 'View', views: { trend: 'Trend', insights: 'Insights' },
+    settings: 'Chart settings', period: 'Period', presets: { all: 'All', m3: 'Last 3 months', m6: 'Last 6 months', y1: 'Last year', custom: 'Custom' },
+    from: 'From', to: 'To', unit: 'Unit', units: { day: 'Day', week: 'Week', month: 'Month' }, metric: 'Metric', metrics: { revenue: 'Revenue', orders: 'Units' },
+    titles: {
+      revenue: { day: 'Daily revenue by product', week: 'Weekly revenue by product', month: 'Monthly revenue by product' },
+      orders: { day: 'Daily units sold by product', week: 'Weekly units sold by product', month: 'Monthly units sold by product' },
+    },
+    unitNotes: { day: 'By day', week: 'By week (starting Monday)', month: 'By month' },
+    total: 'Total', totalRevenue: amount => `Total ${amount}`, totalCount: count => `${count} sold`, orderCount: count => `${count} orders`,
+    count: n => n, other: 'Other', chartLabel: 'Stacked bar chart of sales by product with an event timeline', emptyRange: 'No orders in this period.',
+    events: 'Events', eventLane: 'Events',
+    eventsHint: 'One per line: date | kind | product | text. Leave out the product for a shop-wide event; write the date as 2026-07-01~2026-07-15 for a period. Kinds: update · sale · viral · release · note',
+    eventsPlaceholder: '2026-06-17 | update | Split MMD Player | v1.1.0\n2026-07-01~2026-07-15 | sale | Summer sale\n2026-11-11 | viral | Featured by a big account',
+    copyPrompt: 'Copy instructions for AI', eventCount: n => `${n} shown`,
+    kinds: { release: 'Release', update: 'Update', sale: 'Sale', viral: 'Viral', note: 'Note' },
+    issue: (line, text) => `Line ${line}: ${text}`,
+    issues: { eventFormat: 'Could not read the format.', eventDate: 'Could not read the date.', eventProduct: 'Product not found; shown as a shop-wide event.' },
+    tiles: { revenue: 'Revenue', orders: 'Orders', buyers: 'Buyers', average: 'Average per order', repeat: n => `${n} repeat` },
+    payments: 'Payment methods', heat: 'Orders by weekday and hour', heatNote: 'Times as written in the CSV', heatCell: (day, hour, n) => `${day} ${hour}:00 · ${n}`,
+    weekdays: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+    table: { caption: 'Totals by product', product: 'Product', quantity: 'Units', revenue: 'Revenue', share: 'Share', buyers: 'Buyers', repeat: 'Repeat buyers' },
+    unpaid: n => `${n} unpaid order${n === 1 ? ' was' : 's were'} left out.`, shared: n => `${n} order${n === 1 ? '' : 's'} with several products had the amount shared out by quantity.`,
+    prompt: (products, from, to) => `Make a list of events to show on a BOOTH sales chart.
+
+Format: one event per line, fields separated by |. Output only the list, no explanation.
+date | kind | product | text
+- date: YYYY-MM-DD. A period is YYYY-MM-DD~YYYY-MM-DD
+- kind: update (updates, patches), sale (discounts, price changes), viral (mentions, promotion), release (launch), note (anything else)
+- product: an item ID or name from the list below. If it is not about one product, leave the field out: "date | kind | text"
+- text: shown on the chart as is, so keep it short (e.g. v1.2.0, Summer sale ends)
+- lines starting with # are comments
+
+Products (item ID | name):
+${products}
+
+Chart period: ${from} – ${to}
+
+Example:
+2026-06-17 | update | 8450925 | v1.1.0
+2026-07-01~2026-07-15 | sale | Summer sale
+2026-11-11 | viral | Featured by a big account
+
+Find the events in the material below:
+`,
+    status: {
+      notCsv: 'This is not a CSV file.', notBooth: 'This is not a BOOTH order CSV.', noOrders: 'There are no paid orders.',
+      fileTooLarge: 'Choose a CSV of 20MB or less.', openFailed: 'Could not open the CSV.',
+      saved: 'Chart image created.', saveFailed: 'Could not save the chart image.', copied: 'Copied.', copyFailed: 'Could not copy.',
+    },
+  },
   photo: {
     noscript: 'Turn on JavaScript to use Photo editor. Photos are never sent to a server.',
     file: 'Photo file', start: 'Choose a photo to start.', choose: 'Choose photo', another: 'Another photo',
