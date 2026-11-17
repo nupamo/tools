@@ -35,7 +35,7 @@ const ja: Messages = {
   booth: {
     noscript: 'BOOTH 売上チャートを使うには JavaScript を有効にしてください。CSV はサーバーに送信されません。',
     file: 'BOOTH 注文 CSV', start: 'BOOTH からダウンロードした注文 CSV を選んでください。', choose: 'CSV を選択', another: '別の CSV',
-    drop: '注文 CSV をドロップまたは選択', limits: 'BOOTH 注文管理 → CSV ダウンロード · 最大 20MB', opening: 'CSV を開いています…',
+    drop: '注文 CSV をドロップまたは選択', limits: 'BOOTH Orders → 宛名印刷用CSV · 最大 20MB', opening: 'CSV を開いています…',
     summary: (orders, from, to) => `注文 ${orders}件 · ${from} ~ ${to}`,
     savePng: 'PNG 保存', view: '表示', views: { trend: '推移', insights: '分析' },
     settings: 'チャート設定', period: '期間', presets: { all: 'すべて', m3: '直近3か月', m6: '直近6か月', y1: '直近1年', custom: '指定' },
