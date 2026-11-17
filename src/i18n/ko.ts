@@ -37,7 +37,7 @@ const ko = {
   booth: {
     noscript: 'BOOTH 매출 차트를 사용하려면 JavaScript를 켜주세요. CSV는 서버로 전송되지 않습니다.',
     file: 'BOOTH 주문 CSV', start: 'BOOTH에서 받은 주문 CSV를 골라 시작하세요.', choose: 'CSV 선택', another: '다른 CSV',
-    drop: '주문 CSV를 놓거나 선택하세요', limits: 'BOOTH 주문 관리 → CSV 다운로드 · 최대 20MB', opening: 'CSV 여는 중…',
+    drop: '주문 CSV를 놓거나 선택하세요', limits: 'BOOTH Orders(주문) → 宛名印刷用CSV(주소 인쇄용 CSV) · 최대 20MB', opening: 'CSV 여는 중…',
     summary: (orders: string, from: string, to: string) => `주문 ${orders}건 · ${from} ~ ${to}`,
     savePng: 'PNG 저장', view: '보기', views: { trend: '추이', insights: '분석' },
     settings: '차트 설정', period: '기간', presets: { all: '전체', m3: '최근 3개월', m6: '최근 6개월', y1: '최근 1년', custom: '직접 지정' },
