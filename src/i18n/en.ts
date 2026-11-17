@@ -35,7 +35,7 @@ const en: Messages = {
   booth: {
     noscript: 'Turn on JavaScript to use the BOOTH sales chart. Your CSV is not sent to a server.',
     file: 'BOOTH order CSV', start: 'Choose an order CSV exported from BOOTH to begin.', choose: 'Choose CSV', another: 'Another CSV',
-    drop: 'Drop or choose an order CSV', limits: 'BOOTH Orders → 宛名印刷用CSV · up to 20MB', opening: 'Opening CSV…',
+    drop: 'Drop or choose an order CSV', limits: 'BOOTH Orders → 宛名印刷用CSV (CSV for address labels) · up to 20MB', opening: 'Opening CSV…',
     summary: (orders, from, to) => `${orders} orders · ${from} – ${to}`,
     savePng: 'Save PNG', view: 'View', views: { trend: 'Trend', insights: 'Insights' },
     settings: 'Chart settings', period: 'Period', presets: { all: 'All', m3: 'Last 3 months', m6: 'Last 6 months', y1: 'Last year', custom: 'Custom' },
