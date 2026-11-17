@@ -216,3 +216,52 @@ html[data-color-mode=dark], html[data-color-mode=dark] [data-astryx-theme] { col
  .midi-editor .toolbar-actions { display: flex; flex-wrap: wrap; }
  .midi-editor .toolbar-actions > :nth-child(-n+2) { flex: 1 1 40%; }
 }
+
+/* Chart series colours: eight fixed hues, stepped separately for light and dark surfaces. */
+:root { --chart-1: light-dark(#2a78d6, #3987e5); --chart-2: light-dark(#eb6834, #d95926); --chart-3: light-dark(#1baf7a, #199e70); --chart-4: light-dark(#eda100, #c98500); --chart-5: light-dark(#e87ba4, #d55181); --chart-6: light-dark(#008300, #0ca30c); --chart-7: light-dark(#6250d6, #9085e9); --chart-8: light-dark(#e34948, #e66767); }
+.booth-body { grid-template-columns: minmax(0,1fr) 360px; }
+.booth-stage { position: relative; min-width: 0; min-height: 0; display: grid; }
+.booth-stage .empty-upload { margin: 28px; width: auto; height: auto; }
+.booth-stage.is-dragging { outline: 2px solid var(--accent); outline-offset: -4px; }
+.sales-chart { min-width: 0; min-height: 0; width: 100%; height: 100%; }
+.booth-empty { place-self: center; color: var(--muted); margin: 0; }
+.booth-panel { overflow-y: auto; gap: 14px; }
+.booth-settings, .booth-events { display: flex; flex-direction: column; gap: 10px; }
+.booth-dates { display: grid; gap: 8px; }
+.booth-events-text textarea { font: 11px/1.6 ui-monospace, SFMono-Regular, Menlo, monospace; white-space: pre; overflow-x: auto; }
+.booth-issues { margin: 0; padding: 0; list-style: none; font-size: 11px; line-height: 1.5; color: var(--color-text-red); }
+.booth-insights { overflow-y: auto; padding: 16px 20px; display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 12px; align-content: start; }
+.booth-tiles { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); gap: 12px; margin: 0; }
+.booth-tiles > div, .booth-card { border: 1px solid var(--line); border-radius: 8px; padding: 12px 14px; min-width: 0; }
+.booth-tiles dt { font-size: 12px; color: var(--muted); }
+.booth-tiles dd { margin: 2px 0 0; font-size: 22px; font-weight: 650; letter-spacing: -.4px; display: flex; align-items: baseline; flex-wrap: wrap; gap: 0 8px; }
+.booth-tiles small { font-size: 11px; font-weight: 400; letter-spacing: 0; color: var(--muted); }
+.booth-card h2 { font-size: 13px; font-weight: 650; margin-bottom: 10px; display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
+.booth-card h2 small { font-size: 11px; font-weight: 400; color: var(--muted); }
+.booth-table-card { grid-column: 1 / -1; overflow-x: auto; }
+.booth-table { width: 100%; border-collapse: collapse; font-size: 12px; font-variant-numeric: tabular-nums; }
+.booth-table caption { text-align: left; font-size: 13px; font-weight: 650; margin-bottom: 8px; }
+.booth-table th, .booth-table td { padding: 6px 8px; text-align: right; border-top: 1px solid var(--line); white-space: nowrap; }
+.booth-table thead th { border-top: 0; color: var(--muted); font-weight: 400; font-size: 11px; }
+.booth-table th:first-child { text-align: left; padding-left: 0; font-weight: 400; max-width: 260px; overflow: hidden; text-overflow: ellipsis; }
+.booth-table td:last-child, .booth-table th:last-child { padding-right: 0; }
+.booth-swatch { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 8px; }
+.booth-bars { margin: 0; padding: 0; list-style: none; display: grid; grid-template-columns: minmax(0,auto) minmax(40px,1fr) auto; gap: 8px 10px; align-items: center; font-size: 12px; }
+.booth-bars li { display: contents; }
+.booth-bar-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.booth-bar-track { height: 10px; }
+.booth-bar-track i { display: block; height: 100%; min-width: 2px; border-radius: 0 4px 4px 0; background: var(--chart-1); }
+.booth-bar-value { color: var(--muted); font-size: 11px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.booth-heat { display: grid; gap: 2px; }
+.booth-heat-row { display: grid; grid-template-columns: 26px repeat(24,minmax(0,1fr)); gap: 2px; align-items: center; font-size: 11px; color: var(--muted); }
+.booth-heat-row i { height: 16px; border-radius: 3px; background: var(--color-background-muted); font-style: normal; }
+.booth-heat-hours i { height: auto; background: none; font-size: 10px; }
+@media (max-width:1100px) { .booth-insights { grid-template-columns: minmax(0,1fr); } .booth-tiles { grid-template-columns: repeat(2,minmax(0,1fr)); } }
+@media (max-width:760px) {
+ .booth-body { display: flex; flex-direction: column; }
+ .booth-stage { min-height: 250px; }
+ .booth-stage:has(.sales-chart) { height: 76dvh; min-height: 460px; }
+ .booth-panel, .booth-insights { overflow: visible; }
+ .booth-insights { padding: 12px; }
+ .booth-editor .toolbar-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; }
+}

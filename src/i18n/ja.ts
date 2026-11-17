@@ -32,6 +32,61 @@ const ja: Messages = {
       audioFailed: '音を再生できませんでした。', copied: 'コピーしました。', copyFailed: 'コピーできませんでした。テキストを選択してコピーしてください。',
     },
   },
+  booth: {
+    noscript: 'BOOTH 売上チャートを使うには JavaScript を有効にしてください。CSV はサーバーに送信されません。',
+    file: 'BOOTH 注文 CSV', start: 'BOOTH からダウンロードした注文 CSV を選んでください。', choose: 'CSV を選択', another: '別の CSV',
+    drop: '注文 CSV をドロップまたは選択', limits: 'BOOTH 注文管理 → CSV ダウンロード · 最大 20MB', opening: 'CSV を開いています…',
+    summary: (orders, from, to) => `注文 ${orders}件 · ${from} ~ ${to}`,
+    savePng: 'PNG 保存', view: '表示', views: { trend: '推移', insights: '分析' },
+    settings: 'チャート設定', period: '期間', presets: { all: 'すべて', m3: '直近3か月', m6: '直近6か月', y1: '直近1年', custom: '指定' },
+    from: '開始日', to: '終了日', unit: '単位', units: { day: '日', week: '週', month: '月' }, metric: '指標', metrics: { revenue: '売上', orders: '販売数' },
+    titles: {
+      revenue: { day: '商品別 日次売上', week: '商品別 週次売上', month: '商品別 月次売上' },
+      orders: { day: '商品別 日次販売数', week: '商品別 週次販売数', month: '商品別 月次販売数' },
+    },
+    unitNotes: { day: '日単位', week: '週単位(月曜始まり)', month: '月単位' },
+    total: '合計', totalRevenue: amount => `合計 ${amount}`, totalCount: count => `${count}個販売`, orderCount: count => `注文 ${count}件`,
+    count: n => `${n}個`, other: 'その他', chartLabel: '商品別売上の積み上げ棒グラフとイベントのタイムライン', emptyRange: 'この期間に注文はありません。',
+    events: 'イベント', eventLane: 'イベント',
+    eventsHint: '1行に1件: 日付 | 種類 | 商品 | 内容。商品を省くとショップ全体のイベント、日付を 2026-07-01~2026-07-15 と書くと期間になります。種類: update · sale · viral · release · note',
+    eventsPlaceholder: '2026-06-17 | update | Split MMD Player | v1.1.0\n2026-07-01~2026-07-15 | sale | サマーセール\n2026-11-11 | viral | 有名アカウントが紹介',
+    copyPrompt: 'AI 用の書き方をコピー', eventCount: n => `${n}件表示`,
+    kinds: { release: '発売', update: 'アップデート', sale: 'セール', viral: 'バズ', note: 'メモ' },
+    issue: (line, text) => `${line}行目: ${text}`,
+    issues: { eventFormat: '形式を読み取れません。', eventDate: '日付を読み取れません。', eventProduct: '商品が見つからないため、全体のイベントとして表示します。' },
+    tiles: { revenue: '売上', orders: '注文', buyers: '購入者', average: '注文あたり平均', repeat: n => `リピート ${n}人` },
+    payments: '支払い方法', heat: '曜日・時間帯別の注文', heatNote: 'CSV に書かれた時刻のまま', heatCell: (day, hour, n) => `${day} ${hour}時 · ${n}件`,
+    weekdays: ['月', '火', '水', '木', '金', '土', '日'],
+    table: { caption: '商品別の合計', product: '商品', quantity: '販売数', revenue: '売上', share: '割合', buyers: '購入者', repeat: 'リピーター' },
+    unpaid: n => `未払いの注文 ${n}件は除外しました。`, shared: n => `複数の商品を含む注文 ${n}件は、金額を数量の割合で分けました。`,
+    prompt: (products, from, to) => `BOOTH の売上チャートに表示するイベント一覧を作ってください。
+
+形式: 1行に1件、項目は | で区切る。説明なしで一覧だけ出力。
+日付 | 種類 | 商品 | 内容
+- 日付: YYYY-MM-DD。期間は YYYY-MM-DD~YYYY-MM-DD
+- 種類: update(アップデート・パッチ)、sale(セール・価格変更)、viral(紹介・バズ)、release(発売)、note(その他)
+- 商品: 下の一覧の商品 ID または名前。特定の商品でなければこの項目を省いて「日付 | 種類 | 内容」
+- 内容: そのままチャートに表示されるので短く (例: v1.2.0、サマーセール終了)
+- # で始まる行はコメント
+
+商品 (商品 ID | 名前):
+${products}
+
+チャートの期間: ${from} ~ ${to}
+
+例:
+2026-06-17 | update | 8450925 | v1.1.0
+2026-07-01~2026-07-15 | sale | サマーセール
+2026-11-11 | viral | 有名アカウントが紹介
+
+以下の資料からイベントを探して整理してください:
+`,
+    status: {
+      notCsv: 'CSV ファイルではありません。', notBooth: 'BOOTH の注文 CSV ではありません。', noOrders: '支払い済みの注文がありません。',
+      fileTooLarge: '20MB 以下の CSV を選んでください。', openFailed: 'CSV を開けませんでした。',
+      saved: 'チャート画像を作成しました。', saveFailed: 'チャート画像を保存できませんでした。', copied: 'コピーしました。', copyFailed: 'コピーできませんでした。',
+    },
+  },
   photo: {
     noscript: '写真補正を使うには JavaScript を有効にしてください。写真はサーバーに送信されません。',
     file: '写真ファイル', start: '写真を 1 枚選んで始めましょう。', choose: '写真を選択', another: '別の写真',

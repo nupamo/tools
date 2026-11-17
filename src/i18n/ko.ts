@@ -1,5 +1,6 @@
 import type { PhotoMessage } from '../lib/photo/messages';
 import type { MidiMessage } from '../lib/midi/messages';
+import type { BoothMessage } from '../lib/booth/messages';
 
 const ko = {
   site: {
@@ -32,6 +33,61 @@ const ko = {
       fileTooLarge: '5MB 이하의 MIDI 파일을 선택해주세요.', openFailed: 'MIDI 파일을 열지 못했습니다.',
       audioFailed: '소리를 재생하지 못했습니다.', copied: '복사했습니다.', copyFailed: '복사하지 못했습니다. 직접 선택해 복사해주세요.',
     } satisfies Record<MidiMessage, string>,
+  },
+  booth: {
+    noscript: 'BOOTH 매출 차트를 사용하려면 JavaScript를 켜주세요. CSV는 서버로 전송되지 않습니다.',
+    file: 'BOOTH 주문 CSV', start: 'BOOTH에서 받은 주문 CSV를 골라 시작하세요.', choose: 'CSV 선택', another: '다른 CSV',
+    drop: '주문 CSV를 놓거나 선택하세요', limits: 'BOOTH 주문 관리 → CSV 다운로드 · 최대 20MB', opening: 'CSV 여는 중…',
+    summary: (orders: string, from: string, to: string) => `주문 ${orders}건 · ${from} ~ ${to}`,
+    savePng: 'PNG 저장', view: '보기', views: { trend: '추이', insights: '분석' },
+    settings: '차트 설정', period: '기간', presets: { all: '전체', m3: '최근 3개월', m6: '최근 6개월', y1: '최근 1년', custom: '직접 지정' },
+    from: '시작일', to: '종료일', unit: '단위', units: { day: '일', week: '주', month: '월' }, metric: '지표', metrics: { revenue: '매출', orders: '판매 수' },
+    titles: {
+      revenue: { day: '제품별 일간 매출', week: '제품별 주간 매출', month: '제품별 월간 매출' },
+      orders: { day: '제품별 일간 판매 수', week: '제품별 주간 판매 수', month: '제품별 월간 판매 수' },
+    },
+    unitNotes: { day: '일 단위', week: '주 단위(월요일 시작)', month: '월 단위' },
+    total: '합계', totalRevenue: (amount: string) => `합계 ${amount}`, totalCount: (count: string) => `${count}개 판매`, orderCount: (count: string) => `주문 ${count}건`,
+    count: (n: string) => `${n}개`, other: '기타', chartLabel: '제품별 매출 누적 막대 차트와 이벤트 타임라인', emptyRange: '이 기간에는 주문이 없습니다.',
+    events: '이벤트', eventLane: '이벤트',
+    eventsHint: '한 줄에 하나씩: 날짜 | 종류 | 제품 | 내용. 제품을 빼면 전체 이벤트, 날짜를 2026-07-01~2026-07-15처럼 쓰면 기간이 됩니다. 종류: update · sale · viral · release · note',
+    eventsPlaceholder: '2026-06-17 | update | Split MMD Player | v1.1.0\n2026-07-01~2026-07-15 | sale | 여름 할인\n2026-11-11 | viral | 유명 계정이 소개',
+    copyPrompt: 'AI용 작성 안내 복사', eventCount: (n: number) => `${n}개 표시`,
+    kinds: { release: '출시', update: '업데이트', sale: '할인', viral: '바이럴', note: '메모' },
+    issue: (line: number, text: string) => `${line}행: ${text}`,
+    issues: { eventFormat: '형식을 읽지 못했습니다.', eventDate: '날짜를 읽지 못했습니다.', eventProduct: '제품을 찾지 못해 전체 이벤트로 표시합니다.' },
+    tiles: { revenue: '매출', orders: '주문', buyers: '구매자', average: '주문당 평균', repeat: (n: string) => `재구매 ${n}명` },
+    payments: '결제 수단', heat: '요일·시간대별 주문', heatNote: 'CSV에 적힌 시각 기준', heatCell: (day: string, hour: number, n: number) => `${day} ${hour}시 · ${n}건`,
+    weekdays: ['월', '화', '수', '목', '금', '토', '일'],
+    table: { caption: '제품별 합계', product: '제품', quantity: '판매 수', revenue: '매출', share: '비중', buyers: '구매자', repeat: '재구매자' },
+    unpaid: (n: number) => `결제되지 않은 주문 ${n}건은 제외했습니다.`, shared: (n: number) => `여러 제품을 함께 산 주문 ${n}건은 금액을 수량 비율로 나눴습니다.`,
+    prompt: (products: string, from: string, to: string) => `BOOTH 매출 차트에 표시할 이벤트 목록을 만들어줘.
+
+형식: 한 줄에 이벤트 하나, 필드는 | 로 구분. 설명 없이 목록만 출력.
+날짜 | 종류 | 제품 | 내용
+- 날짜: YYYY-MM-DD. 기간은 YYYY-MM-DD~YYYY-MM-DD
+- 종류: update(업데이트·패치), sale(할인·가격 변경), viral(소개·바이럴), release(출시), note(기타)
+- 제품: 아래 목록의 상품 ID 또는 이름. 특정 제품이 아니면 이 필드를 빼고 "날짜 | 종류 | 내용"
+- 내용: 차트에 그대로 표시되므로 짧게 (예: v1.2.0, 여름 할인 종료)
+- # 으로 시작하는 줄은 주석
+
+제품 (상품 ID | 이름):
+${products}
+
+차트 기간: ${from} ~ ${to}
+
+예:
+2026-06-17 | update | 8450925 | v1.1.0
+2026-07-01~2026-07-15 | sale | 여름 할인
+2026-11-11 | viral | 유명 계정이 소개
+
+아래 자료에서 이벤트를 찾아 정리해줘:
+`,
+    status: {
+      notCsv: 'CSV 파일이 아닙니다.', notBooth: 'BOOTH 주문 CSV 형식이 아닙니다.', noOrders: '결제된 주문이 없습니다.',
+      fileTooLarge: '20MB 이하의 CSV를 선택해주세요.', openFailed: 'CSV를 열지 못했습니다.',
+      saved: '차트 이미지를 만들었습니다.', saveFailed: '차트 이미지를 저장하지 못했습니다.', copied: '복사했습니다.', copyFailed: '복사하지 못했습니다.',
+    } satisfies Record<BoothMessage, string>,
   },
   photo: {
     noscript: '사진 보정을 사용하려면 JavaScript를 켜주세요. 사진은 서버로 전송되지 않습니다.',
