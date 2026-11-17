@@ -1,11 +1,12 @@
 import { useEffect, useImperativeHandle, useRef, type Ref } from 'react';
 import * as echarts from 'echarts/core';
-import { BarChart, LineChart, ScatterChart } from 'echarts/charts';
+import { BarChart, ScatterChart } from 'echarts/charts';
 import { GridComponent, LegendComponent, MarkAreaComponent, MarkLineComponent, TitleComponent, TooltipComponent } from 'echarts/components';
 import { CanvasRenderer } from 'echarts/renderers';
 import type { EventKind } from '../lib/booth/events';
 
-echarts.use([BarChart, LineChart, ScatterChart, GridComponent, LegendComponent, MarkAreaComponent, MarkLineComponent, TitleComponent, TooltipComponent, CanvasRenderer]);
+// Only these parts of ECharts are bundled. This file is loaded on demand, after a CSV is opened.
+echarts.use([BarChart, ScatterChart, GridComponent, LegendComponent, MarkAreaComponent, MarkLineComponent, TitleComponent, TooltipComponent, CanvasRenderer]);
 
 // `slot` picks the series colour (--chart-1…8); -1 is the neutral colour for "other" and shop-wide events.
 export interface ChartSeries { id: string; name: string; slot: number; values: number[] }
@@ -18,7 +19,7 @@ interface Props {
 }
 
 const TOKENS = ['--color-background-surface', '--color-text-primary', '--color-text-secondary', '--color-border', '--color-border-emphasized', ...Array.from({ length: 8 }, (_, i) => `--chart-${i + 1}`)];
-const LEFT = 76, RIGHT = 28, TOP = 104, AXIS = 34, ROW = 20, MAX_ROWS = 8, TOTAL = '__total';
+const LABEL_CHARS = 18, LEFT = 76, RIGHT = 28, TOP = 104, AXIS = 34, ROW = 20, MAX_ROWS = 8, TOTAL = '__total';
 const SYMBOLS: Record<EventKind, string> = { release: 'diamond', update: 'circle', sale: 'rect', viral: 'triangle', note: 'circle' };
 const escapeHtml = (text: string) => text.replace(/[&<>"']/g, c => `&#${c.charCodeAt(0)};`);
 
@@ -33,7 +34,8 @@ function layoutLane(events: ChartEvent[], count: number, plotWidth: number, font
   const ctx = document.createElement('canvas').getContext('2d'); if (ctx) ctx.font = font;
   const ends: number[] = [];
   const placed = events.map(event => {
-    const text = `${event.label} · ${event.date}`, width = (ctx?.measureText(text).width ?? text.length * 7) + 12, dot = (event.x + .5) / count * plotWidth;
+    // The lane shows a short label only; the date and the full text are in the tooltip.
+    const chars = [...event.label], text = chars.length > LABEL_CHARS ? `${chars.slice(0, LABEL_CHARS - 1).join('').trimEnd()}…` : event.label, width = (ctx?.measureText(text).width ?? text.length * 7) + 12, dot = (event.x + .5) / count * plotWidth;
     const tail = event.x2 === null ? dot : (event.x2 + .5) / count * plotWidth, left = tail + width > plotWidth + RIGHT - 4 && dot - width > 0;
     const from = (left ? dot - width : dot) - 6, to = left ? tail + 6 : tail + width;
     let row = ends.findIndex(end => from > end + 6), show = true;
@@ -114,12 +116,13 @@ export default function SalesChart(props: Props) {
           markArea: { z: 0, silent: true, animation: false, itemStyle: { color: ink, opacity: .06 }, data: events.filter(e => e.x2 !== null).map(e => [{ xAxis: e.x }, { xAxis: e.x2 }]) },
         },
         ...(laneHeight ? [
-          ...lane.placed.filter(p => p.event.x2 !== null).map((p, i) => ({
-            id: `__range${i}`, type: 'line', xAxisIndex: 1, yAxisIndex: 1, silent: true, symbol: 'none', animation: false, tooltip: { show: false },
-            data: [[p.event.x, p.row], [p.event.x2, p.row]], lineStyle: { color: color(p.event.slot), width: 6, opacity: .4, cap: 'round' },
-          })),
           {
             id: '__events', type: 'scatter', xAxisIndex: 1, yAxisIndex: 1, symbolSize: 9, cursor: 'default',
+            // Periods are drawn as a band from their first to their last day.
+            markLine: {
+              z: 1, silent: true, symbol: 'none', animation: false, label: { show: false },
+              data: lane.placed.filter(p => p.event.x2 !== null).map(p => [{ coord: [p.event.x, p.row], lineStyle: { color: color(p.event.slot), type: 'solid', width: 6, opacity: .4, cap: 'round' } }, { coord: [p.event.x2, p.row] }]),
+            },
             tooltip: {
               trigger: 'item',
               formatter: (item: { dataIndex: number }) => {

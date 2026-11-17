@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { Suspense, lazy, useEffect, useMemo, useRef, useState } from 'react';
 import { Theme } from '@astryxdesign/core/theme';
 import { neutralTheme } from '@astryxdesign/theme-neutral/built';
 import { Button } from '@astryxdesign/core/Button';
@@ -12,8 +12,11 @@ import { MAX_SERIES, axisPosition, summarize, type Unit } from '../lib/booth/agg
 import { parseEvents } from '../lib/booth/events';
 import { isBoothMessage, type BoothMessage } from '../lib/booth/messages';
 import { getMessages, type Locale } from '../i18n';
-import SalesChart, { type ChartEvent, type SalesChartHandle } from './SalesChart';
+import type { ChartEvent, SalesChartHandle } from './SalesChart';
 import ToolIcon from './ToolIcon';
+
+// ECharts is most of this tool's code, so it is fetched only once there is a CSV to draw.
+const SalesChart = lazy(() => import('./SalesChart'));
 
 type Preset = 'all' | 'm3' | 'm6' | 'y1' | 'custom';
 type Metric = 'revenue' | 'orders';
@@ -123,9 +126,9 @@ export default function BoothSales({ locale = 'ko', label }: { locale?: Locale; 
         onDrop={event => { event.preventDefault(); setDragging(false); const file = event.dataTransfer.files[0]; if (file) void loadFile(file); }}>
         {!sales || !summary || !chartData ? <button type="button" className="empty-upload" disabled={loading} onClick={choose}><ToolIcon name="fileSheet" size="lg" /><strong>{loading ? t.opening : t.drop}</strong><small>{t.limits}</small></button>
           : !summary.orders ? <p className="booth-empty">{t.emptyRange}</p>
-          : view === 'trend' ? <SalesChart ref={chart} label={t.chartLabel} title={t.titles[metric][unit]} period={`${isoDay(from)} ~ ${isoDay(to)}`} subtitle={subtitle} laneName={t.eventLane} totalName={t.total}
+          : view === 'trend' ? <Suspense fallback={<p className="booth-empty">{t.opening}</p>}><SalesChart ref={chart} label={t.chartLabel} title={t.titles[metric][unit]} period={`${isoDay(from)} ~ ${isoDay(to)}`} subtitle={subtitle} laneName={t.eventLane} totalName={t.total}
               labels={chartData.labels} ranges={chartData.ranges} series={chartData.series} events={chartData.events} hidden={hidden}
-              format={metric === 'revenue' ? yen : n} onHiddenChange={setHidden} />
+              format={metric === 'revenue' ? yen : n} onHiddenChange={setHidden} /></Suspense>
           : <div className="booth-insights">
             <dl className="booth-tiles">
               <div><dt>{t.tiles.revenue}</dt><dd>{yen(summary.revenue)}</dd></div>
